@@ -1,0 +1,22 @@
+[gd_scene load_steps=2 format=3 uid="uid://dwqr8jq0alrsi"]
+
+[sub_resource type="GDScript" id="GDScript_k1pfj"]
+script/source = "extends Sprite3D
+
+
+@export var display_position : Vector3
+
+
+func _ready():
+	pixel_size = 0.01 * display_position.length()
+
+
+func _process(delta):
+	global_position = Ship.global_position + display_position
+"
+
+[node name="CelestialBodySprite" type="Sprite3D"]
+pixel_size = 5.0
+billboard = 1
+texture_filter = 0
+script = SubResource("GDScript_k1pfj")

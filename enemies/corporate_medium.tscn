@@ -1,0 +1,116 @@
+[gd_scene load_steps=9 format=3 uid="uid://bxqtyvxqrgw5q"]
+
+[ext_resource type="PackedScene" uid="uid://d3hrs35a4dnui" path="res://classes/enemy_base.tscn" id="1_nf4qt"]
+[ext_resource type="PackedScene" uid="uid://duxiwxsn8m8l7" path="res://parts/slab_gun.tscn" id="2_y0mhc"]
+[ext_resource type="PackedScene" uid="uid://pbjgws1bkxqv" path="res://parts/fuel_tank.tscn" id="3_6h1tr"]
+[ext_resource type="PackedScene" uid="uid://d174m4bl8v8yi" path="res://parts/block.tscn" id="3_srayb"]
+[ext_resource type="PackedScene" uid="uid://t0agq3u1vvkq" path="res://parts/slab_engine.tscn" id="5_c8s6j"]
+[ext_resource type="PackedScene" uid="uid://cjs8v4fb0ccpw" path="res://parts/engine.tscn" id="6_nmbt0"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6k5sh"]
+albedo_color = Color(0.67451, 0.52549, 0.0784314, 1)
+roughness = 0.97
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yknfw"]
+albedo_color = Color(0.647059, 0.647059, 0.647059, 1)
+metallic = 0.86
+roughness = 0.3
+
+[node name="Corporate medium" instance=ExtResource("1_nf4qt")]
+max_speed = 20.0
+thrust = 10.0
+turning = 1.5
+target_distance = Vector2(60, 200)
+innacuracy = 0.5
+attack_speed = 1.5
+attack_damage = 2.0
+health = 20.0
+color_scheme = Array[StandardMaterial3D]([SubResource("StandardMaterial3D_6k5sh"), SubResource("StandardMaterial3D_yknfw")])
+
+[node name="SlabGun" parent="." index="0" instance=ExtResource("2_y0mhc")]
+transform = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, -1, 0, -3)
+color_indexes = [0, 1]
+
+[node name="SlabGun2" parent="." index="1" instance=ExtResource("2_y0mhc")]
+transform = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, 1, 0, -3)
+color_indexes = [0, 1]
+
+[node name="Block" parent="." index="2" instance=ExtResource("3_srayb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, -1)
+
+[node name="Block2" parent="." index="3" instance=ExtResource("3_srayb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, -1)
+
+[node name="Block8" parent="." index="4" instance=ExtResource("3_srayb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, -2)
+
+[node name="Block7" parent="." index="5" instance=ExtResource("3_srayb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -1)
+
+[node name="Block10" parent="." index="6" instance=ExtResource("3_srayb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -2)
+
+[node name="Block11" parent="." index="7" instance=ExtResource("3_srayb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, -1)
+
+[node name="Block12" parent="." index="8" instance=ExtResource("3_srayb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, -2)
+
+[node name="Block15" parent="." index="9" instance=ExtResource("3_srayb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -3)
+
+[node name="Block16" parent="." index="10" instance=ExtResource("3_srayb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, -3)
+
+[node name="Block9" parent="." index="11" instance=ExtResource("3_srayb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, -2)
+
+[node name="FuelTank" parent="." index="12" instance=ExtResource("3_6h1tr")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 2)
+color_indexes = [1, 0]
+
+[node name="FuelTank2" parent="." index="13" instance=ExtResource("3_6h1tr")]
+transform = Transform3D(-1, 8.74228e-08, 0, -8.74228e-08, -1, 0, 0, 0, 1, 0, 0.5, 2)
+color_indexes = [1, 0]
+
+[node name="SlabEngine" parent="." index="14" instance=ExtResource("5_c8s6j")]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0.5, 0)
+color_indexes = [0, 1]
+
+[node name="SlabEngine6" parent="." index="15" instance=ExtResource("5_c8s6j")]
+transform = Transform3D(1, 0, 0, 0, 1.31134e-07, -1, 0, 1, 1.31134e-07, 0, -0.5, 0)
+color_indexes = [0, 1]
+
+[node name="Block4" parent="." index="16" instance=ExtResource("3_srayb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 1)
+
+[node name="Block13" parent="." index="17" instance=ExtResource("3_srayb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 2)
+
+[node name="Block5" parent="." index="18" instance=ExtResource("3_srayb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1)
+
+[node name="Block14" parent="." index="19" instance=ExtResource("3_srayb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 2)
+
+[node name="SlabEngine7" parent="." index="20" instance=ExtResource("5_c8s6j")]
+transform = Transform3D(1.91069e-15, -1, 0, 1, 1.91069e-15, -4.37114e-08, 4.37114e-08, 0, 1, 0.99392, 0.00415516, 2.9983)
+color_indexes = [0, 1]
+
+[node name="SlabEngine9" parent="." index="21" instance=ExtResource("5_c8s6j")]
+transform = Transform3D(4.37114e-08, 4.37114e-08, 1, 1, 1.91069e-15, -4.37114e-08, -3.82138e-15, 1, -4.37114e-08, 0.99392, 0.00415516, -0.00169802)
+color_indexes = [0, 1]
+
+[node name="SlabEngine10" parent="." index="22" instance=ExtResource("5_c8s6j")]
+transform = Transform3D(-4.37114e-08, -1.31134e-07, -1, 1, 1.91069e-15, -4.37114e-08, 7.64275e-15, -1, 1.31134e-07, -1.00608, 0.00415516, -0.00169802)
+color_indexes = [0, 1]
+
+[node name="SlabEngine8" parent="." index="23" instance=ExtResource("5_c8s6j")]
+transform = Transform3D(1.91069e-15, -1, 0, 1, 1.91069e-15, -4.37114e-08, 4.37114e-08, 0, 1, -1, 0, 3)
+color_indexes = [0, 1]
+
+[node name="Engine" parent="." index="24" instance=ExtResource("6_nmbt0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 3)
+
+[node name="Engine2" parent="." index="25" instance=ExtResource("6_nmbt0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 3)

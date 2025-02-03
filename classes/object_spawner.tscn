@@ -1,0 +1,49 @@
+[gd_scene load_steps=2 format=3 uid="uid://b3x1gq71qfqfj"]
+
+[sub_resource type="GDScript" id="GDScript_hrimy"]
+script/source = "extends Node
+
+
+
+@export_file var filepath
+@export var travel_per_spawn := 100.0
+@export var spawn_distance := 100.0
+@export var max_wave_size := 1
+@export var max_spawns := 0
+@export var starting_timer := 0
+
+@export var enabled := true
+
+var num_spawned : int
+var timer : float
+
+
+
+func _ready():
+	timer = starting_timer
+
+
+
+func _physics_process(delta):
+	if !enabled:
+		return
+	
+	if Ship.global_position.direction_to(Vector3.ZERO).dot(Ship.velocity.normalized()) < 0:
+		timer += Ship.velocity.length() * delta
+		
+		if timer > travel_per_spawn:
+			timer = 0
+			
+			for i in range(randi_range(1, max_wave_size)):
+				if max_spawns < 1 or max_spawns > num_spawned:
+					num_spawned += 1
+					
+					var new = load(filepath).instantiate()
+					var spawn_dir = (Vector3(randf_range(-0.5, 0.5), randf_range(-0.5, 0.5), -1) + Ship.velocity.normalized()).normalized()
+					
+					add_sibling(new)
+					new.global_position = Ship.global_position + spawn_dir * spawn_distance
+"
+
+[node name="ObjectSpawner" type="Node"]
+script = SubResource("GDScript_hrimy")

@@ -1,0 +1,249 @@
+[gd_scene load_steps=6 format=3 uid="uid://d3hrs35a4dnui"]
+
+[ext_resource type="Texture2D" uid="uid://7skg0yf8gas4" path="res://assets/red_arrow.png" id="1_kys1g"]
+[ext_resource type="Texture2D" uid="uid://c4chsk31llci8" path="res://assets/healthbar_end.png" id="1_vee3d"]
+[ext_resource type="Texture2D" uid="uid://cbf7rt1d6b0j6" path="res://assets/red_healthbar.png" id="2_x42se"]
+[ext_resource type="Texture2D" uid="uid://dd8re0wqfaaa7" path="res://assets/grey_healthbar.png" id="3_mfhpv"]
+
+[sub_resource type="GDScript" id="GDScript_u0j48"]
+script/source = "extends Node3D
+
+
+
+var enemy
+
+
+
+@export var max_speed := 30.0
+@export var thrust := 1.0
+@export var turning := 1.0
+@export var target_distance := Vector2(40, 80)
+@export var innacuracy := 1.0
+@export var attack_speed := 1.0
+@export var attack_damage := 1.0
+@export var projectile_speed := 45.0
+@export var health := 10.0
+@export var color_scheme : Array[StandardMaterial3D]
+
+
+
+var velocity := Vector3.ZERO
+var target_vel := Vector3.ZERO
+var target_facing := Vector3(0, 0, 1)
+
+enum s {
+	approaching,
+	attacking,
+	fleeing
+}
+var state := s.approaching
+
+var destroyed := false
+var current_health := 10.0
+var fire_time := 0
+
+
+
+func _ready():
+	current_health = health
+	global_rotation = Vector3(randf_range(0, 180), randf_range(0, 180), 0)
+	await get_tree().create_timer(randf()).timeout
+
+
+
+func _process(delta):
+	var pos = get_viewport().get_camera_3d().unproject_position(global_position)
+	$HBoxContainer.position = pos - $HBoxContainer.size / 2 - Vector2(0, 20)
+	
+	if acos(Vector2(1, 0).dot((pos - get_viewport().size / 2.0))) < PI / 2:
+		if get_viewport().get_camera_3d().global_basis.z.dot(get_viewport().get_camera_3d().global_position.direction_to(global_position)) < 0:
+			$Control.rotation = acos(Vector2(0, -1).dot((pos - get_viewport().size / 2.0).normalized()))
+		else:
+			$Control.rotation = acos(Vector2(0, -1).dot((pos - get_viewport().size / 2.0).normalized())) + PI
+	else:
+		if get_viewport().get_camera_3d().global_basis.z.dot(get_viewport().get_camera_3d().global_position.direction_to(global_position)) < 0:
+			$Control.rotation = acos(Vector2(0, 1).dot((pos - get_viewport().size / 2.0).normalized())) + PI
+		else:
+			$Control.rotation = acos(Vector2(0, 1).dot((pos - get_viewport().size / 2.0).normalized()))
+	
+	if get_viewport().get_camera_3d().is_position_in_frustum(global_position):
+		$HBoxContainer.show()
+		$Control.hide()
+	else:
+		$HBoxContainer.hide()
+		$Control.show()
+	
+	if destroyed:
+		$HBoxContainer.hide()
+		$Control.hide()
+	elif is_equal_approx(health, current_health):
+		$HBoxContainer/GreyHeath.hide()
+	else:
+		$HBoxContainer/GreyHeath.show()
+		$HBoxContainer/GreyHeath.size_flags_stretch_ratio = health - current_health
+		$HBoxContainer/RedHealth.size_flags_stretch_ratio = current_health
+
+
+
+func _physics_process(delta):
+	if destroyed:
+		global_translate(velocity * delta)
+		return
+	
+	
+	match state:
+		
+		s.approaching:
+			if global_position.distance_to(Ship.global_position) < target_distance.y and global_position.distance_to(Ship.global_position) > target_distance.x:
+				state = s.attacking
+				fire_time = Time.get_ticks_msec()
+			
+			target_vel = global_position.direction_to(Ship.global_position) * max_speed
+			velocity += (velocity.direction_to(target_vel) * thrust * delta).limit_length(velocity.distance_to(target_vel))
+			
+			target_facing = velocity.direction_to(target_vel)
+			if target_facing.cross(-global_basis.z).normalized().is_normalized():
+				global_rotate(target_facing.cross(global_basis.z).normalized(), min(acos(target_facing.dot(global_basis.z)), turning * delta))
+		
+		
+		
+		s.attacking:
+			if global_position.distance_to(Ship.global_position) > target_distance.y:
+				state = s.approaching
+			if global_position.distance_to(Ship.global_position) < target_distance.x:
+				state = s.fleeing
+			
+			target_vel = Ship.velocity
+			velocity += (velocity.direction_to(target_vel) * thrust * 0.5 * delta).limit_length(velocity.distance_to(target_vel))
+			for enemy in get_tree().get_nodes_in_group(\"Enemies\"):
+				if enemy == self:
+					continue
+				velocity -= global_position.direction_to(enemy.global_position) / global_position.distance_to(enemy.global_position) * delta * 0.8
+			
+			var lead := Vector3.ZERO
+			for i in range(4):
+				var relative_vel = Ship.velocity - velocity
+				var travel_time = global_position.distance_to(Ship.global_position + lead) / projectile_speed
+				lead = relative_vel * travel_time
+			
+			target_facing = global_position.direction_to(Ship.global_position + lead)
+			if target_facing.cross(-global_basis.z).normalized().is_normalized():
+				global_rotate(target_facing.cross(global_basis.z).normalized(), min(acos(target_facing.dot(global_basis.z)), turning * delta))
+			
+			if Time.get_ticks_msec() - fire_time > (1.0 / attack_speed) * 1000 and !destroyed and get_parent().tokens > 0:
+				fire_time = Time.get_ticks_msec()
+				get_parent().tokens -= 1
+				
+				var bullet = load(\"res://classes/bullet.tscn\").instantiate()
+				bullet.damage = attack_damage
+				bullet.velocity = global_basis.z * -projectile_speed + velocity + Vector3(randf_range(-innacuracy, innacuracy), randf_range(-innacuracy, innacuracy), randf_range(-innacuracy, innacuracy))
+				GameManager.add_child(bullet)
+				bullet.global_position = global_position
+		
+		
+		
+		s.fleeing:
+			if global_position.distance_to(Ship.global_position) > target_distance.x + 10:
+				state = s.attacking
+				fire_time = Time.get_ticks_msec()
+			
+			target_vel = global_position.direction_to(Ship.global_position) * max_speed * -1
+			velocity += (velocity.direction_to(target_vel) * thrust * delta).limit_length(velocity.distance_to(target_vel))
+			
+			target_facing = velocity.direction_to(target_vel)
+			if target_facing.cross(-global_basis.z).normalized().is_normalized():
+				global_rotate(target_facing.cross(global_basis.z).normalized(), min(acos(target_facing.dot(global_basis.z)), turning * delta))
+	
+	
+	velocity = velocity.limit_length(max_speed)
+	global_translate(velocity * delta)
+
+
+
+func damage(amount : float, part : Node3D, knockback := Vector3.ZERO):
+	current_health -= max(amount, part.health)
+	
+	velocity += knockback
+	
+	part.destroy()
+	
+	if current_health <= 0:
+		add_child(load(\"res://fx/default_destruction.tscn\").instantiate())
+		
+		for child in get_children():
+			if child is Node3D:
+				load(\"res://classes/part_ragdoll.tscn\").instantiate().take_part(child)
+		
+		destroyed = true
+		await get_tree().create_timer(1).timeout
+		queue_free()
+"
+
+[node name="EnemyBase" type="Node3D" groups=["Enemies"]]
+script = SubResource("GDScript_u0j48")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -39.0
+offset_top = -6.0
+offset_right = 39.0
+offset_bottom = 6.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer"]
+custom_minimum_size = Vector2(2, 12)
+layout_mode = 2
+texture = ExtResource("1_vee3d")
+
+[node name="RedHealth" type="TextureRect" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+texture = ExtResource("2_x42se")
+
+[node name="GreyHeath" type="TextureRect" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+texture = ExtResource("3_mfhpv")
+
+[node name="TextureRect2" type="TextureRect" parent="HBoxContainer"]
+custom_minimum_size = Vector2(2, 12)
+layout_mode = 2
+texture = ExtResource("1_vee3d")
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(20, 20)
+
+[node name="TextureRect" type="TextureRect" parent="Control"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -470.0
+offset_right = 12.0
+offset_bottom = -438.0
+grow_horizontal = 2
+grow_vertical = 2
+rotation = 0.785398
+texture = ExtResource("1_kys1g")

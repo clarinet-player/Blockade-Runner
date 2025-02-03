@@ -1,0 +1,53 @@
+[gd_scene load_steps=6 format=3 uid="uid://dx4o8okj63x87"]
+
+[ext_resource type="Script" path="res://classes/part_base.gd" id="1_wk22s"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_03qpg"]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_su203"]
+_surfaces = [{
+"aabb": AABB(-0.5, -0.5, -0.5, 1, 1, 1.00001),
+"format": 34896613377,
+"index_count": 24,
+"index_data": PackedByteArray(1, 0, 2, 0, 0, 0, 1, 0, 5, 0, 2, 0, 1, 0, 4, 0, 5, 0, 5, 0, 0, 0, 2, 0, 5, 0, 3, 0, 0, 0, 1, 0, 3, 0, 4, 0, 1, 0, 0, 0, 3, 0, 4, 0, 3, 0, 5, 0),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 6,
+"vertex_data": PackedByteArray(0, 0, 0, 0, 254, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 0, 0, 0, 0, 255, 255, 0, 0, 254, 255, 0, 0, 255, 255, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0)
+}]
+blend_shape_mode = 0
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_6lmrl"]
+resource_local_to_scene = true
+resource_name = "hell ship2_Cube"
+_surfaces = [{
+"aabb": AABB(-0.5, -0.5, -0.5, 1, 1, 1.00001),
+"attribute_data": PackedByteArray(255, 31, 255, 63, 255, 31, 255, 63, 255, 31, 255, 63, 255, 31, 255, 127, 255, 95, 255, 191, 255, 95, 255, 191, 255, 159, 255, 191, 255, 159, 255, 191, 255, 159, 255, 191, 255, 95, 255, 63, 255, 95, 255, 63, 255, 95, 255, 63, 255, 95, 255, 127, 255, 95, 255, 127, 255, 95, 255, 127, 255, 159, 255, 127, 255, 159, 255, 127, 255, 159, 255, 127),
+"format": 34896613399,
+"index_count": 24,
+"index_data": PackedByteArray(4, 0, 6, 0, 0, 0, 5, 0, 15, 0, 7, 0, 5, 0, 13, 0, 15, 0, 16, 0, 2, 0, 8, 0, 16, 0, 10, 0, 2, 0, 3, 0, 9, 0, 12, 0, 3, 0, 1, 0, 9, 0, 14, 0, 11, 0, 17, 0),
+"material": SubResource("StandardMaterial3D_03qpg"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 18,
+"vertex_data": PackedByteArray(0, 0, 0, 0, 254, 255, 170, 42, 0, 0, 0, 0, 254, 255, 255, 191, 0, 0, 0, 0, 254, 255, 159, 94, 0, 0, 0, 0, 0, 0, 255, 191, 0, 0, 0, 0, 0, 0, 170, 42, 0, 0, 0, 0, 0, 0, 255, 255, 0, 0, 255, 255, 0, 0, 170, 42, 0, 0, 255, 255, 0, 0, 255, 255, 0, 0, 255, 255, 0, 0, 191, 87, 255, 255, 0, 0, 254, 255, 255, 191, 255, 255, 0, 0, 254, 255, 255, 95, 255, 255, 0, 0, 254, 255, 84, 213, 255, 255, 0, 0, 0, 0, 255, 191, 255, 255, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 84, 213, 255, 255, 255, 255, 0, 0, 255, 255, 255, 255, 255, 255, 0, 0, 175, 92, 255, 255, 255, 255, 0, 0, 84, 213, 84, 213, 84, 213, 0, 0, 255, 127, 23, 245, 197, 90, 0, 0, 255, 127, 84, 213, 84, 213, 255, 191, 255, 191, 84, 213, 84, 213, 255, 191, 255, 191, 124, 236, 98, 61, 0, 0, 255, 127, 255, 255, 255, 127, 170, 42, 170, 42, 0, 0, 255, 127, 255, 191, 255, 191, 170, 42, 170, 42, 255, 191, 255, 191, 57, 241, 144, 77, 170, 42, 170, 42)
+}]
+blend_shape_mode = 0
+shadow_mesh = SubResource("ArrayMesh_su203")
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_3fqna"]
+points = PackedVector3Array(0.5, 0.5, -0.5, 0.5, -0.5, 0.499995, 0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, 0.499995, -0.5, -0.5, -0.5)
+
+[node name="Wedge" type="StaticBody3D"]
+script = ExtResource("1_wk22s")
+type = "Wedge"
+mass = 0.5
+health = 0.25
+num_materials = 1
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("ArrayMesh_6lmrl")
+skeleton = NodePath("")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("ConvexPolygonShape3D_3fqna")

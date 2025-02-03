@@ -1,0 +1,77 @@
+[gd_scene load_steps=9 format=3 uid="uid://ddubhhruudl1j"]
+
+[ext_resource type="PackedScene" uid="uid://cwy0si0g7awhp" path="res://classes/combat_scene_base.tscn" id="1_sq2qa"]
+[ext_resource type="PackedScene" uid="uid://b3x1gq71qfqfj" path="res://classes/object_spawner.tscn" id="2_yubo1"]
+[ext_resource type="PackedScene" uid="uid://dwqr8jq0alrsi" path="res://classes/celestial_body_sprite.tscn" id="3_maq3d"]
+[ext_resource type="Texture2D" uid="uid://ds2wul7utl7ri" path="res://assets/thresh.png" id="4_baa7b"]
+[ext_resource type="PackedScene" uid="uid://cf7s62jkd1on1" path="res://classes/ring_gate.tscn" id="5_hnhfr"]
+[ext_resource type="PackedScene" uid="uid://dom60hk30esk3" path="res://enemies/corporate_light.tscn" id="8_fikpn"]
+[ext_resource type="PackedScene" uid="uid://brvvemto0623b" path="res://classes/asteroid.tscn" id="9_0oegt"]
+[ext_resource type="Texture2D" uid="uid://dgeqse8nwjo1a" path="res://assets/black_hole.png" id="10_oj3ew"]
+
+[node name="CombatSceneBase" node_paths=PackedStringArray("docking_position") instance=ExtResource("1_sq2qa")]
+planet = "Thresh"
+docking_position = NodePath("RingGate")
+docking_size = Vector3(50, 50, 10)
+token_gen_delay = 0.45
+
+[node name="ObjectSpawner" parent="." index="0" instance=ExtResource("2_yubo1")]
+filepath = "res://enemies/corporate_light.tscn"
+travel_per_spawn = 125.0
+spawn_distance = 250.0
+max_wave_size = 2
+max_spawns = 16
+
+[node name="ObjectSpawner2" parent="." index="1" instance=ExtResource("2_yubo1")]
+filepath = "res://classes/asteroid.tscn"
+travel_per_spawn = 75.0
+spawn_distance = 750.0
+max_wave_size = 3
+
+[node name="ObjectSpawner3" parent="." index="2" instance=ExtResource("2_yubo1")]
+filepath = "res://enemies/corporate_medium.tscn"
+travel_per_spawn = 275.0
+spawn_distance = 270.0
+max_spawns = 4
+
+[node name="CelestialBodySprite" parent="." index="5" instance=ExtResource("3_maq3d")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1000)
+texture = ExtResource("4_baa7b")
+display_position = Vector3(0, 0, -1000)
+
+[node name="Corporate Light" parent="." index="6" instance=ExtResource("8_fikpn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.0754, -24.1943, -308.773)
+
+[node name="Corporate Light2" parent="." index="7" instance=ExtResource("8_fikpn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -68.8521, 9.50111, -230.122)
+
+[node name="Asteroid" parent="." index="8" instance=ExtResource("9_0oegt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 82.8926, 75.099, -800)
+
+[node name="Asteroid2" parent="." index="9" instance=ExtResource("9_0oegt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.0645, -45.5639, -700)
+
+[node name="Asteroid3" parent="." index="10" instance=ExtResource("9_0oegt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 78.9485, -120.517, -600)
+
+[node name="Asteroid4" parent="." index="11" instance=ExtResource("9_0oegt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 101.439, 161.59, -500)
+
+[node name="Asteroid5" parent="." index="12" instance=ExtResource("9_0oegt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -215.081, -83.9817, -400)
+
+[node name="Asteroid6" parent="." index="13" instance=ExtResource("9_0oegt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 283.474, 33.5855, -300)
+
+[node name="Asteroid7" parent="." index="14" instance=ExtResource("9_0oegt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -83.7461, 28.4634, -239.631)
+
+[node name="Asteroid8" parent="." index="15" instance=ExtResource("9_0oegt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 116.519, -31.8964, -100)
+
+[node name="CelestialBodySprite3" parent="." index="16" instance=ExtResource("3_maq3d")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 500, -500, 500)
+texture = ExtResource("10_oj3ew")
+display_position = Vector3(500, -500, 500)
+
+[node name="RingGate" parent="." index="17" instance=ExtResource("5_hnhfr")]

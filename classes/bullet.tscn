@@ -1,0 +1,59 @@
+[gd_scene load_steps=4 format=3 uid="uid://c6tvoh2iqxvh1"]
+
+[sub_resource type="GDScript" id="GDScript_sjcx7"]
+script/source = "extends Node3D
+
+
+
+var damage : float
+var player : bool
+
+var velocity := Vector3.ZERO
+var spawn_time : int
+
+
+
+func _ready():
+	look_at(global_position + velocity)
+	spawn_time = Time.get_ticks_msec()
+	$MeshInstance3D.mesh.height = velocity.length() / 30
+
+
+
+func _physics_process(delta):
+	if Time.get_ticks_msec() - spawn_time > 6000:
+		queue_free()
+		return
+	
+	var ray_query = PhysicsRayQueryParameters3D.create(global_position, global_position + velocity * delta)
+	if player:
+		ray_query.collision_mask = 0b10
+	else:
+		ray_query.collision_mask = 0b01
+	var raycast = get_world_3d().direct_space_state.intersect_ray(ray_query)
+	
+	if !raycast.is_empty():
+		if \"damage\" in raycast.collider.get_parent():
+			raycast.collider.get_parent().damage(damage, raycast.collider)
+		queue_free()
+	
+	global_translate(velocity * delta)
+"
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_asqoo"]
+shading_mode = 0
+albedo_color = Color(0.780392, 0.662745, 0.14902, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_nigdq"]
+resource_local_to_scene = true
+material = SubResource("StandardMaterial3D_asqoo")
+radius = 0.2
+height = 10.0
+
+[node name="Bullet" type="Node3D"]
+script = SubResource("GDScript_sjcx7")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_nigdq")

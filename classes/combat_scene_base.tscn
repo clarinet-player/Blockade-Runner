@@ -1,0 +1,52 @@
+[gd_scene load_steps=4 format=3 uid="uid://cwy0si0g7awhp"]
+
+[sub_resource type="GDScript" id="GDScript_grw7q"]
+script/source = "extends Node3D
+
+
+
+@export var planet : String
+
+@export var docking_position : Node3D
+@export var docking_size : Vector3
+
+@export var token_gen_delay := 0.4
+
+var tokens := 0
+
+
+
+func _ready():
+	while true:
+		if tokens < 2:
+			tokens += 1
+		await get_tree().create_timer(token_gen_delay).timeout
+
+
+
+func _physics_process(delta):
+	if AABB(docking_position.global_position - docking_size / 2, docking_size).has_point(Ship.global_position):
+		GameManager.start_planet(true, planet)
+"
+
+[sub_resource type="Sky" id="Sky_b81m3"]
+
+[sub_resource type="Environment" id="Environment_f1uxp"]
+background_mode = 1
+sky = SubResource("Sky_b81m3")
+ambient_light_source = 2
+ambient_light_color = Color(0.0980392, 0.0980392, 0.121569, 1)
+tonemap_mode = 2
+
+[node name="CombatSceneBase" type="Node3D"]
+script = SubResource("GDScript_grw7q")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_f1uxp")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.911014, -0.0771264, -0.405098, -0.301809, -0.544706, 0.782436, -0.281006, 0.835073, 0.472958, 0, 3, 0)
+light_color = Color(1, 1, 0.980392, 1)
+light_energy = 0.75
+light_angular_distance = 0.5
+shadow_enabled = true

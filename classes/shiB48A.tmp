@@ -1,0 +1,174 @@
+[gd_scene load_steps=2 format=3 uid="uid://c7yejb1twgq1y"]
+
+[sub_resource type="GDScript" id="GDScript_fa4x3"]
+script/source = "extends Node3D
+
+
+
+var max_speed := 30.0
+var thrust := Vector3.ZERO
+var turning := 1.0
+
+var velocity := Vector3.ZERO
+
+
+var color_scheme : Array[StandardMaterial3D]
+
+var ship_name := \"\"
+var mass := 0.0
+var fuel_capacity := 0.0
+var flight_range
+
+
+var health := 0.0
+var attack_speed := 0.0
+var attack_damage := 5.0
+
+
+
+@onready var camera := $Camera/Camera3D
+
+
+
+func load_data(file : Dictionary):
+	color_scheme = []
+	mass = 0
+	for child in get_children():
+		if child == $Camera:
+			continue
+		child.queue_free()
+	
+	if file.has(\"Camera Position\"):
+		camera.position = Vector3(file[\"Camera Position\"][\"X\"], file[\"Camera Position\"][\"Y\"], file[\"Camera Position\"][\"Z\"])
+	
+	if file.has(\"Name\"):
+		ship_name = file[\"Name\"]
+	
+	for color in file[\"Colors\"]:
+		var material = StandardMaterial3D.new()
+		material.albedo_color = Color(color[\"R\"], color[\"G\"], color[\"B\"])
+		material.roughness = color[\"Roughness\"]
+		material.metallic = color[\"Metallic\"]
+		color_scheme.append(material)
+	
+	
+	for part in file[\"Parts\"]:
+		var new_part
+		
+		match part[\"Type\"]:
+			\"Fuel Tank\":
+				new_part = load(\"res://parts/fuel_tank.tscn\").instantiate()
+			\"Cargo\":
+				new_part = load(\"res://parts/cargo.tscn\").instantiate()
+			\"Block\":
+				new_part = load(\"res://parts/block.tscn\").instantiate()
+			\"Engine\":
+				new_part = load(\"res://parts/engine.tscn\").instantiate()
+			\"Gun\":
+				new_part = load(\"res://parts/gun.tscn\").instantiate()
+			\"Slab\":
+				new_part = load(\"res://parts/slab.tscn\").instantiate()
+			\"Wedge\":
+				new_part = load(\"res://parts/wedge.tscn\").instantiate()
+			\"Wedge Engine\":
+				new_part = load(\"res://parts/wedge_engine.tscn\").instantiate()
+			\"Wedge Gun\":
+				new_part = load(\"res://parts/wedge_gun.tscn\").instantiate()
+			\"Slab Engine\":
+				new_part = load(\"res://parts/slab_engine.tscn\").instantiate()
+			\"Slab Gun\":
+				new_part = load(\"res://parts/slab_gun.tscn\").instantiate()
+			\"Rocket Launcher\":
+				new_part = load(\"res://parts/rocket_launcher.tscn\").instantiate()
+			\"Minigun\":
+				new_part = load(\"res://parts/minigun.tscn\").instantiate()
+			\"Medium Fuel Tank\":
+				new_part = load(\"res://parts/medium_fuel_tank.tscn\").instantiate()
+			\"Medium Engine\":
+				new_part = load(\"res://parts/medium_engine.tscn\").instantiate()
+		
+		if new_part != null:
+			new_part.damaged = part[\"Damaged\"]
+			new_part.color_indexes = part[\"Color Indexes\"]
+			add_child(new_part)
+			new_part.position = Vector3(part[\"Position\"][\"X\"], part[\"Position\"][\"Y\"], part[\"Position\"][\"Z\"])
+			new_part.rotation = Vector3(part[\"Rotation\"][\"X\"], part[\"Rotation\"][\"Y\"], part[\"Rotation\"][\"Z\"])
+
+
+
+func save_data():
+	var new_file = {\"Camera Position\": {\"X\": camera.position.x, \"Y\": camera.position.y, \"Z\": camera.position.z}, \"Colors\": [], \"Parts\": [], \"Name\": ship_name}
+	
+	for material in color_scheme:
+		new_file[\"Colors\"].append({\"R\": material.albedo_color.r, \"G\": material.albedo_color.g, \"B\": material.albedo_color.b, \"Roughness\": material.roughness, \"Metallic\": material.metallic})
+	
+	for child in get_children():
+		if child == $Camera:
+			continue
+		new_file[\"Parts\"].append({\"Type\": child.type, \"Position\": {\"X\": child.position.x, \"Y\": child.position.y, \"Z\": child.position.z}, \"Rotation\": {\"X\": child.rotation.x, \"Y\": child.rotation.y, \"Z\": child.rotation.z}, \"Color Indexes\": child.color_indexes, \"Damaged\": child.damaged})
+	
+	return new_file
+
+
+
+func calculate_stats():
+	mass = 0
+	health = 0
+	fuel_capacity = 0
+	thrust = Vector3.ZERO
+	
+	for part in get_children():
+		if part == $Camera:
+			continue
+		
+		if part.attributes.has(\"Thrust\"):
+			thrust += abs(part.global_basis.z * part.attributes[\"Thrust\"])
+		
+		if part.attributes.has(\"Fuel\"):
+			fuel_capacity += part.attributes[\"Fuel\"]
+		
+		if part.attributes.has(\"Attack Speed\"):
+			pass
+
+
+
+func _input(event):
+	
+	if event is InputEventMouseMotion:
+		if GameManager.game_state == GameManager.states.combat:
+			$Camera.global_rotate($Camera.global_basis.y, event.relative.x * -0.001)
+			$Camera.global_rotate($Camera.global_basis.x, event.relative.y * -0.001)
+
+
+
+func _process(delta):
+	if !GameManager.game_state == GameManager.states.combat:
+		return
+	
+	camera.make_current()
+	$Camera.global_position = global_position
+	global_basis = global_basis.slerp($Camera.global_basis.orthonormalized(), delta * 10 * turning)
+
+
+
+func _physics_process(delta):
+	if !GameManager.game_state == GameManager.states.combat:
+		return
+	
+	velocity += global_basis.x * Input.get_axis(\"Left\", \"Right\") * delta * thrust.x
+	velocity += global_basis.z * Input.get_axis(\"Forward\", \"Back\") * delta * thrust.y
+	velocity += global_basis.y * Input.get_axis(\"Down\", \"Up\") * delta * thrust.z
+	
+	velocity = velocity.limit_length(max_speed)
+	
+	global_position += velocity * delta
+"
+
+[node name="Ship" type="Node3D" groups=["Player"]]
+script = SubResource("GDScript_fa4x3")
+
+[node name="Camera" type="Node3D" parent="."]
+top_level = true
+
+[node name="Camera3D" type="Camera3D" parent="Camera"]
+transform = Transform3D(1, 0, 0, 0, 1, 2.98023e-08, 0, -2.98023e-08, 1, 0, 3, 5)

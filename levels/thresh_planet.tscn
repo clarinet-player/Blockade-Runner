@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://cpalaboyvvapg"]
+
+[ext_resource type="PackedScene" uid="uid://n1rgififa033" path="res://classes/planet_base.tscn" id="1_tlm7r"]
+[ext_resource type="Texture2D" uid="uid://ds2wul7utl7ri" path="res://assets/thresh.png" id="2_0cwwf"]
+
+[node name="PlanetBase" instance=ExtResource("1_tlm7r")]
+
+[node name="TextureRect" type="TextureRect" parent="." index="1"]
+custom_minimum_size = Vector2(1365, 1365)
+layout_mode = 0
+offset_left = -21.0
+offset_top = -39.0
+offset_right = 1344.0
+offset_bottom = 1326.0
+texture = ExtResource("2_0cwwf")

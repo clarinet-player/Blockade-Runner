@@ -1,0 +1,99 @@
+[gd_scene load_steps=6 format=3 uid="uid://c3s11auqk32he"]
+
+[ext_resource type="Theme" uid="uid://6ftdqmtb2drx" path="res://assets/theme2.tres" id="1_1ginm"]
+
+[sub_resource type="GDScript" id="GDScript_krd1n"]
+script/source = "extends Node3D
+
+
+
+func _ready():
+	var data = Ship.save_data()
+	
+	
+
+
+
+func _process(delta):
+	if GameManager.game_state != GameManager.states.editor:
+		return
+	
+	$Camera3D.make_current()
+	if Input.is_action_just_pressed(\"Zoom In\"):
+		$Camera3D.position.x = move_toward($Camera3D.position.x, -1.0, delta * 100)
+	if Input.is_action_just_pressed(\"Zoom Out\"):
+		$Camera3D.position.x = move_toward($Camera3D.position.x, -10.0, delta * 100)
+"
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_jbsxv"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_chj3q"]
+sky_material = SubResource("ProceduralSkyMaterial_jbsxv")
+
+[sub_resource type="Environment" id="Environment_a12j6"]
+background_mode = 2
+sky = SubResource("Sky_chj3q")
+tonemap_mode = 2
+glow_enabled = true
+
+[node name="ShipEditor" type="Node3D"]
+script = SubResource("GDScript_krd1n")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_a12j6")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, 0, 0, 0)
+shadow_enabled = true
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -8, 0, 0)
+
+[node name="save panel" type="HBoxContainer" parent="."]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -280.5
+offset_right = 280.5
+offset_bottom = 63.0
+grow_horizontal = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="Label" type="Label" parent="save panel"]
+layout_mode = 2
+theme = ExtResource("1_1ginm")
+text = "Ship Name"
+
+[node name="save" type="Button" parent="save panel"]
+layout_mode = 2
+theme = ExtResource("1_1ginm")
+text = "Save"
+
+[node name="load" type="Button" parent="save panel"]
+layout_mode = 2
+theme = ExtResource("1_1ginm")
+text = "Load"
+
+[node name="exit" type="Button" parent="save panel"]
+layout_mode = 2
+theme = ExtResource("1_1ginm")
+text = "Exit
+"
+
+[node name="part list" type="VBoxContainer" parent="."]
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -509.0
+offset_right = 263.0
+offset_bottom = 509.0
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="add" type="Button" parent="part list"]
+layout_mode = 2
+theme = ExtResource("1_1ginm")
+text = "Add Part"

@@ -1,0 +1,104 @@
+[gd_scene load_steps=4 format=3 uid="uid://n1rgififa033"]
+
+[ext_resource type="Theme" uid="uid://co8tjlbj1cjyd" path="res://assets/theme.tres" id="1_bam06"]
+[ext_resource type="Theme" uid="uid://6ftdqmtb2drx" path="res://assets/theme2.tres" id="2_roblw"]
+
+[sub_resource type="GDScript" id="GDScript_ftja6"]
+script/source = "extends Control
+
+func _ready():
+	load_data()
+
+func edit_ship():
+	GameManager.start_editor()
+
+func leave():
+	GameManager.start_map()
+
+func refuel():
+	GameManager.credits -= Ship.fuel_capacity - GameManager.fuel
+	GameManager.fuel = Ship.fuel_capacity
+	load_data()
+
+func load_data():
+	$VBoxContainer2/Label.text = \"Fuel: \" + str(snapped(GameManager.fuel, 0.1)) + \" / \" + str(Ship.fuel_capacity)
+	$VBoxContainer2/Label2.text = \"Credits: \" + str(snapped(GameManager.credits, 0.1))
+"
+
+[node name="PlanetBase" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_ftja6")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -268.0
+offset_top = -59.0
+offset_right = 268.0
+offset_bottom = 59.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 25
+
+[node name="Button" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+theme = ExtResource("1_bam06")
+text = "Edit Ship"
+
+[node name="Button3" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+theme = ExtResource("1_bam06")
+text = "Refuel
+"
+
+[node name="Button2" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+theme = ExtResource("1_bam06")
+text = "Leave
+"
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -160.0
+offset_top = -20.0
+offset_right = -96.0
+offset_bottom = 20.0
+grow_horizontal = 0
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="VBoxContainer2"]
+layout_mode = 2
+theme = ExtResource("2_roblw")
+text = "Fuel: "
+
+[node name="Label2" type="Label" parent="VBoxContainer2"]
+layout_mode = 2
+theme = ExtResource("2_roblw")
+text = "Credits:"
+
+[connection signal="button_down" from="VBoxContainer/Button" to="." method="edit_ship"]
+[connection signal="button_down" from="VBoxContainer/Button3" to="." method="refuel"]
+[connection signal="button_down" from="VBoxContainer/Button2" to="." method="leave"]
