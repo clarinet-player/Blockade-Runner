@@ -5,7 +5,6 @@ class_name Part
 @export var type : String
 @export var mass : float
 @export var health : float
-@export_file var destroy_vfx := "res://fx/default_destruction.tscn"
 @export var attributes : Dictionary
 @export var color_indexes := [0]
 
@@ -26,7 +25,7 @@ func load_materials():
 
 
 func destroy():
-	var vfx = load(destroy_vfx).instantiate()
+	var vfx = load("res://fx/hit_effect.tscn").instantiate()
 	add_sibling(vfx)
 	vfx.global_position = global_position
 	get_parent().remove_child(self)

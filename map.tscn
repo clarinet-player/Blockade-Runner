@@ -166,7 +166,7 @@ texture = ExtResource("1_vok40")
 shape = SubResource("SphereShape3D_imp6y")
 
 [node name="Sarnus" type="StaticBody3D" parent="Locations"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.51882, -0.481106, 0.331246)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.51882, -0.481106, -0.169818)
 collision_layer = 4
 collision_mask = 0
 
@@ -260,7 +260,7 @@ texture_filter = 0
 texture = ExtResource("4_xj7ph")
 
 [node name="Sprite3D3" type="Sprite3D" parent="Locations"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.58266, 0.602342, -5.11805)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.42377, 0.49971, -5.01134)
 pixel_size = 0.04
 billboard = 1
 no_depth_test = true

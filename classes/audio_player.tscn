@@ -1,0 +1,26 @@
+[gd_scene load_steps=2 format=3 uid="uid://2hrctgjcpwqi"]
+
+[sub_resource type="GDScript" id="GDScript_ul5ju"]
+script/source = "extends AudioStreamPlayer3D
+
+
+var target : Node3D
+
+
+func start(node : Node3D, audio : String):
+	target = node
+	stream = load(audio)
+	Ship.camera.add_child(self)
+	global_position = get_viewport().get_camera_3d().global_position + get_viewport().get_camera_3d().global_position.direction_to(target.global_position)
+	play()
+	await finished
+	queue_free()
+
+
+func _process(delta):
+	if target != null:
+		global_position = get_viewport().get_camera_3d().global_position + get_viewport().get_camera_3d().global_position.direction_to(target.global_position)
+"
+
+[node name="AudioPlayer" type="AudioStreamPlayer3D"]
+script = SubResource("GDScript_ul5ju")

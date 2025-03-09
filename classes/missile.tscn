@@ -1,0 +1,157 @@
+[gd_scene load_steps=5 format=3 uid="uid://s7f4k78fynew"]
+
+[ext_resource type="Texture2D" uid="uid://035bxp43r5oo" path="res://assets/blue_arrow.png" id="1_f3vkm"]
+
+[sub_resource type="GDScript" id="GDScript_sjcx7"]
+script/source = "extends Node3D
+
+
+
+var damage : float
+var player : bool
+var target : Node3D
+
+enum s {
+	accel,
+	coast,
+	approach,
+	drift
+}
+var state := s.accel
+
+var max_speed := 60.0
+var speed := 5.0
+var accel := 60.0
+var turning := 1.4
+var dir := Vector3.ZERO
+
+
+
+func _ready():
+	await get_tree().create_timer(1.25).timeout
+	state = s.coast
+	await get_tree().create_timer(10.0).timeout
+	queue_free()
+
+
+
+func _process(delta):
+	if get_viewport().get_camera_3d().is_position_in_frustum(global_position) or state == s.drift or player:
+		$Control.hide()
+	else:
+		$Control.show()
+	
+		var pos = get_viewport().get_camera_3d().unproject_position(global_position)
+		if acos(Vector2(1, 0).dot((pos - get_viewport().size / 2.0))) < PI / 2:
+			if get_viewport().get_camera_3d().global_basis.z.dot(get_viewport().get_camera_3d().global_position.direction_to(global_position)) < 0:
+				$Control.rotation = acos(Vector2(0, -1).dot((pos - get_viewport().size / 2.0).normalized()))
+			else:
+				$Control.rotation = acos(Vector2(0, -1).dot((pos - get_viewport().size / 2.0).normalized())) + PI
+		else:
+			if get_viewport().get_camera_3d().global_basis.z.dot(get_viewport().get_camera_3d().global_position.direction_to(global_position)) < 0:
+				$Control.rotation = acos(Vector2(0, 1).dot((pos - get_viewport().size / 2.0).normalized())) + PI
+			else:
+				$Control.rotation = acos(Vector2(0, 1).dot((pos - get_viewport().size / 2.0).normalized()))
+
+
+
+func _physics_process(delta):
+	if state == s.drift or target == null or target.destroyed:
+		global_translate(dir * speed * delta)
+		return
+	
+	
+	match state:
+		s.accel:
+			var lead := Vector3.ZERO
+			for i in range(8):
+				var travel_time = global_position.distance_to(target.global_position + lead) / lerp(speed, max_speed, 0.5)
+				lead = lead.lerp(target.velocity * travel_time, 0.9)
+			var target_dir = global_position.direction_to(target.global_position + lead)
+			var angle = acos(dir.dot(target_dir))
+			dir = dir.slerp(target_dir, min((turning * delta) / angle, angle))
+			speed = move_toward(speed, max_speed, accel * delta)
+		
+		
+		s.coast:
+			if global_position.distance_to(target.global_position) < 50:
+				state = s.approach
+				await get_tree().create_timer(1.0).timeout
+				state = s.drift
+		
+		s.approach:
+			var lead := Vector3.ZERO
+			for i in range(8):
+				var travel_time = global_position.distance_to(target.global_position + lead) / max_speed
+				lead = lead.lerp(target.velocity * travel_time, 0.9)
+				
+			var target_dir = global_position.direction_to(target.global_position + lead)
+			var angle = acos(dir.dot(target_dir))
+			dir = dir.slerp(target_dir, min((turning * 0.5 * delta) / angle, angle))
+	
+	
+	look_at(global_position + dir)
+	
+	var ray_query = PhysicsRayQueryParameters3D.create(global_position, global_position + dir * speed * delta)
+	if player:
+		ray_query.collision_mask = 0b10
+	else:
+		ray_query.collision_mask = 0b01
+	var raycast = get_world_3d().direct_space_state.intersect_ray(ray_query)
+	
+	if !raycast.is_empty():
+		if \"damage\" in raycast.collider.get_parent():
+			raycast.collider.get_parent().damage(damage, raycast.collider, Vector3.ZERO, \"res://fx/missile_hit.mp3\")
+		queue_free()
+	
+	global_translate(dir * speed * delta)
+"
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2ig67"]
+shading_mode = 0
+albedo_color = Color(0.309804, 0.513726, 1, 1)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_pem23"]
+material = SubResource("StandardMaterial3D_2ig67")
+height = 2.5
+
+[node name="Missile" type="Node3D"]
+script = SubResource("GDScript_sjcx7")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("CapsuleMesh_pem23")
+
+[node name="Control" type="Control" parent="."]
+visible = false
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(20, 20)
+
+[node name="TextureRect" type="TextureRect" parent="Control"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -470.0
+offset_right = 12.0
+offset_bottom = -438.0
+grow_horizontal = 2
+grow_vertical = 2
+rotation = 0.785398
+texture = ExtResource("1_f3vkm")

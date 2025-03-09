@@ -36,7 +36,6 @@ background_mode = 1
 sky = SubResource("Sky_b81m3")
 ambient_light_source = 2
 ambient_light_color = Color(0.0980392, 0.0980392, 0.121569, 1)
-tonemap_mode = 2
 
 [node name="CombatSceneBase" type="Node3D"]
 script = SubResource("GDScript_grw7q")

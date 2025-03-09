@@ -17,9 +17,9 @@ metallic = 0.86
 roughness = 0.3
 
 [node name="Corporate Light" instance=ExtResource("1_jiqq4")]
-thrust = 15.0
+thrust = 13.0
 turning = 3.0
-target_distance = Vector2(40, 150)
+target_distance = Vector2(40, 200)
 innacuracy = 2.5
 attack_damage = 1.5
 health = 8.0

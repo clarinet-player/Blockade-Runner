@@ -75,4 +75,5 @@ texture = ExtResource("10_f5r2f")
 display_position = Vector3(500, -500, 500)
 
 [node name="RingGate" parent="." index="17" instance=ExtResource("4_ggueg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -500)
 spawn_distance = 600.0

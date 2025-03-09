@@ -22,7 +22,7 @@ func _process(delta):
 		global_position = Ship.global_position + Vector3(0, 0, -700)
 		if Ship.global_position.dot(Vector3(0, 0, -1)) > spawn_distance:
 			spawned = true
-			for child in get_children(): $MeshInstance3D.show()
+			$MeshInstance3D.show()
 	
 	
 	var pos = get_viewport().get_camera_3d().unproject_position(global_position)

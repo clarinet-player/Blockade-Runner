@@ -1,4 +1,6 @@
-[gd_scene load_steps=6 format=3 uid="uid://brvvemto0623b"]
+[gd_scene load_steps=7 format=3 uid="uid://brvvemto0623b"]
+
+[ext_resource type="Texture2D" uid="uid://l4uopo18hgh0" path="res://assets/asteroid.png" id="1_2xgs6"]
 
 [sub_resource type="GDScript" id="GDScript_6oop6"]
 script/source = "extends StaticBody3D
@@ -34,8 +36,9 @@ func _physics_process(delta):
 "
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6aduu"]
-albedo_color = Color(0.317647, 0.203922, 0.196078, 1)
+albedo_texture = ExtResource("1_2xgs6")
 roughness = 0.8
+texture_filter = 0
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_rqmb0"]
 _surfaces = [{
