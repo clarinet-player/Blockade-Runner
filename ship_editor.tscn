@@ -40,6 +40,7 @@ func _ready():
 	$\"add part/Button16\".button_down.connect(add_part.bind(\"res://parts/ammo.tscn\"))
 	$\"add part/Button17\".button_down.connect(add_part.bind(\"res://parts/thrusters_2.tscn\"))
 	$\"add part/Button18\".button_down.connect(add_part.bind(\"res://parts/thrusters_3.tscn\"))
+	$\"add part/Button19\".button_down.connect(add_part.bind(\"res://parts/railgun.tscn\"))
 
 
 
@@ -942,6 +943,12 @@ text = "Wedge Gun"
 layout_mode = 2
 theme = ExtResource("1_1ginm")
 text = "Rocket Launcher"
+
+[node name="Button19" type="Button" parent="add part"]
+layout_mode = 2
+theme = ExtResource("1_1ginm")
+text = "Railgun
+"
 
 [node name="Button13" type="Button" parent="add part"]
 layout_mode = 2

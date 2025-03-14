@@ -21,17 +21,25 @@ func take_part(part : Node3D):
 
 
 func _physics_process(delta):
-	if global_position.distance_to(Ship.global_position) > 175:
+	if global_position.distance_to(Ship.global_position) > 300:
 		queue_free()
 		return
 	global_translate(velocity * delta)
 	global_rotate(angular.normalized(), angular.length())
 
 
-func damage(_amount, _part, knockback := Vector3.ZERO):
+func damage(_amount, _part, knockback := Vector3.ZERO, sfx := \"\"):
 	velocity += knockback
 	if get_child(0) is StaticBody3D:
 		get_child(0).destroy()
+	
+	if !sfx.is_empty():
+		var audio = load(\"res://classes/audio_player.tscn\").instantiate()
+		audio.start(self, sfx)
+	else:
+		var audio = load(\"res://classes/audio_player.tscn\").instantiate()
+		audio.start(self, \"res://fx/hit.mp3\")
+	
 	await get_tree().create_timer(5).timeout
 	queue_free()
 "

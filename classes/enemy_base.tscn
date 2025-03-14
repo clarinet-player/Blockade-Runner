@@ -12,7 +12,7 @@ script/source = "extends Node3D
 
 var enemy
 
-
+@export var wtf : float
 
 @export var max_speed := 30.0
 @export var thrust := 1.0
@@ -21,7 +21,6 @@ var enemy
 @export var innacuracy := 1.0
 @export var attack_speed := 1.0
 @export var attack_damage := 1.0
-@export var homing := false
 @export var projectile_speed := 45.0
 @export var health := 10.0
 @export var color_scheme : Array[StandardMaterial3D]
@@ -42,6 +41,8 @@ var state := s.approaching
 var destroyed := false
 var current_health := 10.0
 var fire_time := 0
+
+var thrust_directions := Vector3i.ZERO
 
 
 
@@ -99,6 +100,7 @@ func _physics_process(delta):
 				fire_time = Time.get_ticks_msec()
 			
 			target_vel = global_position.direction_to(Ship.global_position) * max_speed
+			thrust_directions = global_basis * velocity.direction_to(target_vel) * 2
 			velocity += (velocity.direction_to(target_vel) * thrust * delta).limit_length(velocity.distance_to(target_vel))
 			
 			target_facing = velocity.direction_to(target_vel)
@@ -114,6 +116,7 @@ func _physics_process(delta):
 				state = s.fleeing
 			
 			target_vel = Ship.velocity
+			thrust_directions = global_basis * velocity.direction_to(target_vel) * 2
 			velocity += (velocity.direction_to(target_vel) * thrust * 0.5 * delta).limit_length(velocity.distance_to(target_vel))
 			for enemy in get_tree().get_nodes_in_group(\"Enemies\"):
 				if enemy == self:
@@ -133,18 +136,7 @@ func _physics_process(delta):
 			if Time.get_ticks_msec() - fire_time > (1.0 / attack_speed) * 1000 and !destroyed and (get_parent().tokens > 0 or homing):
 				fire_time = Time.get_ticks_msec()
 				get_parent().tokens -= 1
-				
-				var bullet
-				if homing:
-					bullet = load(\"res://classes/missile.tscn\").instantiate()
-					bullet.dir = global_basis.y
-					bullet.target = Ship
-				else:
-					bullet = load(\"res://classes/bullet.tscn\").instantiate()
-					bullet.velocity = global_basis.z * -projectile_speed + velocity + Vector3(randf_range(-innacuracy, innacuracy), randf_range(-innacuracy, innacuracy), randf_range(-innacuracy, innacuracy))
-				bullet.damage = attack_damage
-				GameManager.add_child(bullet)
-				bullet.global_position = global_position
+				shoot()
 		
 		
 		
@@ -154,12 +146,12 @@ func _physics_process(delta):
 				fire_time = Time.get_ticks_msec()
 			
 			target_vel = global_position.direction_to(Ship.global_position) * max_speed * -1
+			thrust_directions = global_basis * velocity.direction_to(target_vel) * 2
 			velocity += (velocity.direction_to(target_vel) * thrust * delta).limit_length(velocity.distance_to(target_vel))
 			
 			target_facing = velocity.direction_to(target_vel)
 			if target_facing.cross(-global_basis.z).normalized().is_normalized():
 				global_rotate(target_facing.cross(global_basis.z).normalized(), min(acos(target_facing.dot(global_basis.z)), turning * delta))
-	
 	
 	velocity = velocity.limit_length(max_speed)
 	global_translate(velocity * delta)
@@ -171,30 +163,50 @@ func damage(amount : float, part : Node3D, knockback := Vector3.ZERO, sfx := \"\
 	velocity += knockback
 	part.destroy()
 	
+	var audio = load(\"res://classes/audio_player.tscn\").instantiate()
+	if !sfx.is_empty():
+		audio.start(self, sfx)
+	elif current_health <= 0:
+		audio.start(self, \"res://fx/destroy.mp3\")
+	else:
+		audio.start(self, \"res://fx/hit.mp3\")
+	
 	if current_health <= 0:
 		for child in get_children():
 			if child is Node3D:
 				load(\"res://classes/part_ragdoll.tscn\").instantiate().take_part(child)
-		
-		var audio = load(\"res://classes/audio_player.tscn\").instantiate()
-		if sfx.is_empty():
-			audio.start(self, \"res://assets/destroy.mp3\")
-		else:
-			audio.start(self, sfx)
-		
 		destroyed = true
 		await get_tree().create_timer(1).timeout
 		queue_free()
-	else:
-		var audio = load(\"res://classes/audio_player.tscn\").instantiate()
-		if sfx.is_empty():
-			audio.start(self, \"res://assets/hit.mp3\")
-		else:
-			audio.start(self, sfx)
+
+
+
+func shoot():
+	var audio = load(\"res://classes/audio_player.tscn\").instantiate()
+	audio.start(self, \"res://fx/shoot.mp3\")
+	
+	var bullet = load(\"res://classes/bullet.tscn\").instantiate()
+	bullet.velocity = global_basis.z * -projectile_speed + velocity + Vector3(randf_range(-innacuracy, innacuracy), randf_range(-innacuracy, innacuracy), randf_range(-innacuracy, innacuracy))
+	bullet.damage = attack_damage
+	GameManager.add_child(bullet)
+	bullet.global_position = global_position
+
+
 "
 
 [node name="EnemyBase" type="Node3D" groups=["Enemies"]]
 script = SubResource("GDScript_u0j48")
+max_speed = null
+thrust = null
+turning = null
+target_distance = null
+innacuracy = null
+attack_speed = null
+attack_damage = null
+homing = null
+projectile_speed = null
+health = null
+color_scheme = null
 
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
 anchors_preset = 8

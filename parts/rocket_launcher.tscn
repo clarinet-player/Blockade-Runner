@@ -7,16 +7,19 @@ script/source = "extends Part
 
 
 
-var cooldown := 10000
+const icon = \"res://assets/missile_icon.png\"
+var cooldown := 9000.0
 var use_time := 0
+var readied := false
 
 var targets := []
 
 
 
 func _process(delta):
-	if GameManager.game_state != GameManager.states.combat or Time.get_ticks_msec() - use_time < cooldown:
+	if GameManager.game_state != GameManager.states.combat or Time.get_ticks_msec() - use_time < cooldown or !readied:
 		$Control.hide()
+		return
 	else:
 		$Control.show()
 	

@@ -1,6 +1,16 @@
-[gd_scene load_steps=8 format=3 uid="uid://cjs8v4fb0ccpw"]
+[gd_scene load_steps=11 format=3 uid="uid://cjs8v4fb0ccpw"]
 
-[ext_resource type="Script" path="res://classes/part_base.gd" id="1_qwi23"]
+[sub_resource type="GDScript" id="GDScript_0yx20"]
+script/source = "extends Part
+
+func _process(delta):
+	if \"thrust_directions\" in get_parent() and basis.z.dot(get_parent().thrust_directions) < -0.5:
+		$GPUParticles3D.emitting = true
+		$OmniLight3D.light_energy = 1
+	else:
+		$GPUParticles3D.emitting = false
+		$OmniLight3D.light_energy = 0
+"
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8lspn"]
 resource_name = "Hull.001"
@@ -76,8 +86,27 @@ shadow_mesh = SubResource("ArrayMesh_u3fgs")
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_p24s2"]
 height = 0.5
 
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_s6aso"]
+lifetime_randomness = 0.5
+direction = Vector3(0, 0, 1)
+spread = 15.0
+initial_velocity_min = 45.0
+initial_velocity_max = 50.0
+gravity = Vector3(0, 0, 0)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gupfa"]
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+albedo_color = Color(0.705882, 0.392157, 0, 0.0980392)
+billboard_mode = 1
+
+[sub_resource type="QuadMesh" id="QuadMesh_h5g4c"]
+material = SubResource("StandardMaterial3D_gupfa")
+size = Vector2(0.75, 0.75)
+
 [node name="Engine" type="StaticBody3D"]
-script = ExtResource("1_qwi23")
+script = SubResource("GDScript_0yx20")
 type = "Engine"
 mass = 2.0
 health = 0.5
@@ -97,3 +126,15 @@ shape = SubResource("BoxShape3D_2gc74")
 [node name="CollisionShape3D2" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0.75)
 shape = SubResource("CylinderShape3D_p24s2")
+
+[node name="GPUParticles3D" type="GPUParticles3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.5)
+amount = 12
+lifetime = 0.05
+process_material = SubResource("ParticleProcessMaterial_s6aso")
+draw_pass_1 = SubResource("QuadMesh_h5g4c")
+
+[node name="OmniLight3D" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.5)
+light_color = Color(0.705882, 0.392157, 0, 1)
+shadow_enabled = true

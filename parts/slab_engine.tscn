@@ -1,6 +1,16 @@
-[gd_scene load_steps=8 format=3 uid="uid://t0agq3u1vvkq"]
+[gd_scene load_steps=11 format=3 uid="uid://t0agq3u1vvkq"]
 
-[ext_resource type="Script" path="res://classes/part_base.gd" id="1_rsk2n"]
+[sub_resource type="GDScript" id="GDScript_uwpqf"]
+script/source = "extends Part
+
+func _process(delta):
+	if \"thrust_directions\" in get_parent() and basis.z.dot(get_parent().thrust_directions) < -0.5:
+		$GPUParticles3D.emitting = true
+		$OmniLight3D.light_energy = 1
+	else:
+		$GPUParticles3D.emitting = false
+		$OmniLight3D.light_energy = 0
+"
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rjaew"]
 resource_name = "Hull"
@@ -77,8 +87,27 @@ size = Vector3(1, 1, 0.5)
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_kwwbf"]
 height = 0.5
 
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_mwgqa"]
+lifetime_randomness = 0.5
+direction = Vector3(0, 0, 1)
+spread = 15.0
+initial_velocity_min = 45.0
+initial_velocity_max = 50.0
+gravity = Vector3(0, 0, 0)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gupfa"]
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+albedo_color = Color(0.705882, 0.392157, 0, 0.0980392)
+billboard_mode = 1
+
+[sub_resource type="QuadMesh" id="QuadMesh_qd12s"]
+material = SubResource("StandardMaterial3D_gupfa")
+size = Vector2(0.75, 0.75)
+
 [node name="SlabEngine" type="StaticBody3D"]
-script = ExtResource("1_rsk2n")
+script = SubResource("GDScript_uwpqf")
 type = "Slab Engine"
 mass = 1.5
 health = 0.25
@@ -99,3 +128,14 @@ shape = SubResource("BoxShape3D_pyo2e")
 [node name="CollisionShape3D2" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0.249745)
 shape = SubResource("CylinderShape3D_kwwbf")
+
+[node name="GPUParticles3D" type="GPUParticles3D" parent="."]
+amount = 12
+lifetime = 0.05
+process_material = SubResource("ParticleProcessMaterial_mwgqa")
+draw_pass_1 = SubResource("QuadMesh_qd12s")
+
+[node name="OmniLight3D" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1)
+light_color = Color(0.705882, 0.392157, 0, 1)
+shadow_enabled = true

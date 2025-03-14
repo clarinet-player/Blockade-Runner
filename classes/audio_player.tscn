@@ -11,7 +11,10 @@ func start(node : Node3D, audio : String):
 	target = node
 	stream = load(audio)
 	Ship.camera.add_child(self)
-	global_position = get_viewport().get_camera_3d().global_position + get_viewport().get_camera_3d().global_position.direction_to(target.global_position)
+	if target == null:
+		position = Vector3.ZERO
+	else:
+		global_position = get_viewport().get_camera_3d().global_position + get_viewport().get_camera_3d().global_position.direction_to(target.global_position) * 12.5
 	play()
 	await finished
 	queue_free()
@@ -19,7 +22,7 @@ func start(node : Node3D, audio : String):
 
 func _process(delta):
 	if target != null:
-		global_position = get_viewport().get_camera_3d().global_position + get_viewport().get_camera_3d().global_position.direction_to(target.global_position)
+		global_position = get_viewport().get_camera_3d().global_position + get_viewport().get_camera_3d().global_position.direction_to(target.global_position) * 12.5
 "
 
 [node name="AudioPlayer" type="AudioStreamPlayer3D"]

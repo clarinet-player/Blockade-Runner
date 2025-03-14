@@ -1,8 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://c7yejb1twgq1y"]
+[gd_scene load_steps=7 format=3 uid="uid://c7yejb1twgq1y"]
 
 [ext_resource type="Texture2D" uid="uid://c4chsk31llci8" path="res://assets/healthbar_end.png" id="1_tfon3"]
 [ext_resource type="Texture2D" uid="uid://dbigg863742sn" path="res://assets/green_healthbar.png" id="2_aeh01"]
 [ext_resource type="Texture2D" uid="uid://dd8re0wqfaaa7" path="res://assets/grey_healthbar.png" id="3_g6sop"]
+[ext_resource type="Texture2D" uid="uid://dsxc51248xm6j" path="res://assets/blue_healthbar.png" id="4_2jx5a"]
+[ext_resource type="Texture2D" uid="uid://7767gb3rfixl" path="res://assets/crosshair.png" id="4_alqo5"]
 
 [sub_resource type="GDScript" id="GDScript_fa4x3"]
 script/source = "extends Node3D
@@ -18,7 +20,9 @@ var max_speed := 0.0
 var thrust := Vector3.ZERO
 var turning := 1.0
 
-var secondary
+var secondaries := []
+var ready_secondary
+var secondary_use_time := 0
 
 var max_health := 0.0
 var health := 0.0
@@ -30,6 +34,7 @@ var attack_damage := 0.0
 var velocity := Vector3.ZERO
 var fire_time := 0
 var thrust_directions := Vector3i.ZERO
+var engine_audio
 var destroyed := false
 
 
@@ -47,9 +52,8 @@ func load_data(data : Dictionary, new_name : String):
 	mass = 0
 	destroyed = false
 	for child in get_children():
-		if child == $Camera or child == $HBoxContainer:
-			continue
-		child.free()
+		if child is StaticBody3D:
+			child.free()
 	
 	ship_name = new_name
 	
@@ -104,14 +108,14 @@ func load_data(data : Dictionary, new_name : String):
 				new_part = load(\"res://parts/thrusters_2.tscn\").instantiate()
 			\"Thrusters 3\":
 				new_part = load(\"res://parts/thrusters_3.tscn\").instantiate()
+			\"Railgun\":
+				new_part = load(\"res://parts/railgun.tscn\").instantiate()
 		
 		if new_part != null:
 			new_part.color_indexes = part[\"Color Indexes\"]
 			add_child(new_part)
 			new_part.position = Vector3(part[\"Position\"][\"X\"], part[\"Position\"][\"Y\"], part[\"Position\"][\"Z\"])
 			new_part.rotation = Vector3(part[\"Rotation\"][\"X\"], part[\"Rotation\"][\"Y\"], part[\"Rotation\"][\"Z\"])
-			if \"use_secondary\" in new_part:
-				secondary = new_part
 	
 	calculate_stats()
 
@@ -163,6 +167,9 @@ func calculate_stats(reset_hp := true):
 		
 		if part.attributes.has(\"Attack Damage\"):
 			attack_damage += part.attributes[\"Attack Damage\"]
+		
+		if \"use_secondary\" in part:
+			secondaries.append(part)
 	
 	thrust = thrust * 20 / mass
 	turning = (thrust.x + thrust.y) / 2
@@ -194,21 +201,51 @@ func _process(delta):
 	$Camera.global_position = global_position
 	
 	if !GameManager.game_state == GameManager.states.combat:
-		$HBoxContainer.hide()
+		$Healthbar.hide()
+		$Secondary.hide()
+		$TextureRect.hide()
+		thrust_directions = Vector3i.ZERO
+		if engine_audio != null:
+			engine_audio.queue_free()
 		return
 	
 	camera.make_current()
 	
-	$HBoxContainer.show()
+	
+	$Healthbar.show()
+	$TextureRect.show()
 	if is_equal_approx(health, max_health):
-		$HBoxContainer/TextureRect3.hide()
+		$Healthbar/TextureRect3.hide()
 	else:
-		$HBoxContainer/TextureRect3.show()
-		$HBoxContainer/TextureRect2.size_flags_stretch_ratio = health
-		$HBoxContainer/TextureRect3.size_flags_stretch_ratio = max_health - health
+		$Healthbar/TextureRect3.show()
+		$Healthbar/TextureRect2.size_flags_stretch_ratio = health
+		$Healthbar/TextureRect3.size_flags_stretch_ratio = max_health - health
+	
+	
+	if ready_secondary != null:
+		$Secondary.hide()
+	else:
+		var highest = 0.0
+		for part in secondaries:
+			if part != null and (Time.get_ticks_msec() - part.use_time) / part.cooldown > highest:
+				highest = (Time.get_ticks_msec() - part.use_time) / part.cooldown
+		if is_zero_approx(highest):
+			$Secondary.hide()
+		else:
+			$Secondary.show()
+			$Secondary/TextureRect2.size_flags_stretch_ratio = highest
+			$Secondary/TextureRect3.size_flags_stretch_ratio = 1 - highest
+		
 	
 	if !Input.is_action_pressed(\"Free Camera\"):
 		global_basis = global_basis.orthonormalized().slerp($Camera.global_basis.orthonormalized(), delta * turning)
+	
+	if (Input.get_axis(\"Left\", \"Right\") != 0 or Input.get_axis(\"Forward\", \"Back\") != 0 or Input.get_axis(\"Down\", \"Up\") != 0):
+		if engine_audio == null:
+			engine_audio = load(\"res://classes/audio_player.tscn\").instantiate()
+			engine_audio.start(null, \"res://fx/engines.mp3\")
+	elif engine_audio != null:
+		engine_audio.queue_free()
 	
 	thrust_directions = Vector3i(Input.get_axis(\"Left\", \"Right\"), Input.get_axis(\"Down\", \"Up\"), Input.get_axis(\"Forward\", \"Back\"))
 
@@ -218,11 +255,24 @@ func _physics_process(delta):
 	if !GameManager.game_state == GameManager.states.combat:
 		return
 	
-	if Input.is_action_pressed(\"Shoot Secondary\") and secondary != null and Time.get_ticks_msec() - secondary.use_time > secondary.cooldown:
-		secondary.use_secondary()
+	if ready_secondary == null:
+		for part in secondaries:
+			if part != null and Time.get_ticks_msec() - part.use_time > part.cooldown:
+				ready_secondary = part
+				ready_secondary.readied = true
+		
+	if Input.is_action_just_pressed(\"Shoot Secondary\") and ready_secondary != null and Time.get_ticks_msec() - ready_secondary.use_time > ready_secondary.cooldown:
+		secondary_use_time = Time.get_ticks_msec()
+		ready_secondary.use_secondary()
+		ready_secondary.readied = false
+		ready_secondary = null
 	
 	if Input.is_action_pressed(\"Shoot Primary\") and attack_speed > 0 and Time.get_ticks_msec() - fire_time > 1000 / attack_speed and !destroyed:
 		fire_time = Time.get_ticks_msec()
+		
+		var audio = load(\"res://classes/audio_player.tscn\").instantiate()
+		audio.start(null, \"res://fx/shoot.mp3\")
+		
 		var bullet = load(\"res://classes/bullet.tscn\").instantiate()
 		bullet.player = true
 		bullet.damage = attack_damage
@@ -248,6 +298,12 @@ func damage(amount : float, part : Node3D, knockback := Vector3.ZERO, sfx := \"\
 		destroyed = true
 		GameManager.load_game(GameManager.file_number)
 	
+	var audio = load(\"res://classes/audio_player.tscn\").instantiate()
+	if !sfx.is_empty():
+		audio.start(null, sfx)
+	else:
+		audio.start(null, \"res://fx/hit.mp3\")
+	
 	if part != null:
 		part.destroy()
 	if !destroyed:
@@ -265,7 +321,7 @@ top_level = true
 [node name="Camera3D" type="Camera3D" parent="Camera"]
 transform = Transform3D(1, 0, 0, 0, 1, 2.98023e-08, 0, -2.98023e-08, 1, 0, 0, 0)
 
-[node name="HBoxContainer" type="HBoxContainer" parent="."]
+[node name="Healthbar" type="HBoxContainer" parent="."]
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
@@ -279,22 +335,70 @@ grow_horizontal = 2
 grow_vertical = 0
 theme_override_constants/separation = 0
 
-[node name="TextureRect" type="TextureRect" parent="HBoxContainer"]
+[node name="TextureRect" type="TextureRect" parent="Healthbar"]
 custom_minimum_size = Vector2(7, 42)
 layout_mode = 2
 texture = ExtResource("1_tfon3")
 
-[node name="TextureRect2" type="TextureRect" parent="HBoxContainer"]
+[node name="TextureRect2" type="TextureRect" parent="Healthbar"]
 layout_mode = 2
 size_flags_horizontal = 3
 texture = ExtResource("2_aeh01")
 
-[node name="TextureRect3" type="TextureRect" parent="HBoxContainer"]
+[node name="TextureRect3" type="TextureRect" parent="Healthbar"]
 layout_mode = 2
 size_flags_horizontal = 3
 texture = ExtResource("3_g6sop")
 
-[node name="TextureRect4" type="TextureRect" parent="HBoxContainer"]
+[node name="TextureRect4" type="TextureRect" parent="Healthbar"]
 custom_minimum_size = Vector2(7, 42)
 layout_mode = 2
 texture = ExtResource("1_tfon3")
+
+[node name="Secondary" type="HBoxContainer" parent="."]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -120.0
+offset_top = -79.0
+offset_right = 121.0
+offset_bottom = -58.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_constants/separation = 0
+
+[node name="TextureRect" type="TextureRect" parent="Secondary"]
+custom_minimum_size = Vector2(3.5, 21)
+layout_mode = 2
+texture = ExtResource("1_tfon3")
+
+[node name="TextureRect2" type="TextureRect" parent="Secondary"]
+layout_mode = 2
+size_flags_horizontal = 3
+texture = ExtResource("4_2jx5a")
+
+[node name="TextureRect3" type="TextureRect" parent="Secondary"]
+layout_mode = 2
+size_flags_horizontal = 3
+texture = ExtResource("3_g6sop")
+
+[node name="TextureRect4" type="TextureRect" parent="Secondary"]
+custom_minimum_size = Vector2(3.5, 21)
+layout_mode = 2
+texture = ExtResource("1_tfon3")
+
+[node name="TextureRect" type="TextureRect" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -9.0
+offset_top = -9.0
+offset_right = 9.0
+offset_bottom = 9.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("4_alqo5")

@@ -7,12 +7,12 @@
 [ext_resource type="PackedScene" uid="uid://t0agq3u1vvkq" path="res://parts/slab_engine.tscn" id="5_c8s6j"]
 [ext_resource type="PackedScene" uid="uid://cjs8v4fb0ccpw" path="res://parts/engine.tscn" id="6_nmbt0"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6k5sh"]
-albedo_color = Color(0.67451, 0.52549, 0.0784314, 1)
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3t2ek"]
+albedo_color = Color(0.729412, 0.729412, 0.729412, 1)
 roughness = 0.97
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yknfw"]
-albedo_color = Color(0.647059, 0.647059, 0.647059, 1)
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ijwhc"]
+albedo_color = Color(0.678431, 0.678431, 0.678431, 1)
 metallic = 0.86
 roughness = 0.3
 
@@ -27,7 +27,7 @@ attack_damage = 2.5
 homing = true
 projectile_speed = 50.0
 health = 16.0
-color_scheme = Array[StandardMaterial3D]([SubResource("StandardMaterial3D_6k5sh"), SubResource("StandardMaterial3D_yknfw")])
+color_scheme = Array[StandardMaterial3D]([SubResource("StandardMaterial3D_3t2ek"), SubResource("StandardMaterial3D_ijwhc")])
 
 [node name="SlabGun" parent="." index="0" instance=ExtResource("2_y0mhc")]
 transform = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, -1, 0, -3)
