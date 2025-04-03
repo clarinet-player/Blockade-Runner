@@ -1,6 +1,17 @@
-[gd_scene load_steps=9 format=3 uid="uid://b0lwtuj2rl2pi"]
+[gd_scene load_steps=12 format=3 uid="uid://b0lwtuj2rl2pi"]
 
-[ext_resource type="Script" path="res://classes/part_base.gd" id="1_702dp"]
+[sub_resource type="GDScript" id="GDScript_igdc6"]
+script/source = "extends Part
+
+
+func _process(delta):
+	if \"thrust_directions\" in get_parent() and basis.z.dot(get_parent().thrust_directions) < -0.5:
+		$GPUParticles3D.emitting = true
+		$OmniLight3D.light_energy = 1.2
+	else:
+		$GPUParticles3D.emitting = false
+		$OmniLight3D.light_energy = 0
+"
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2rjjd"]
 resource_name = "Hull"
@@ -110,8 +121,29 @@ size = Vector3(2, 2, 1)
 height = 0.5
 radius = 0.936493
 
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_fsdad"]
+lifetime_randomness = 0.5
+emission_shape = 1
+emission_sphere_radius = 0.8
+direction = Vector3(0, 0, 1)
+spread = 15.0
+initial_velocity_min = 45.0
+initial_velocity_max = 50.0
+gravity = Vector3(0, 0, 0)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sqwwi"]
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+albedo_color = Color(0.705882, 0.392157, 0, 0.0980392)
+billboard_mode = 1
+
+[sub_resource type="QuadMesh" id="QuadMesh_n6d0f"]
+material = SubResource("StandardMaterial3D_sqwwi")
+size = Vector2(0.75, 0.75)
+
 [node name="MediumEngine" type="StaticBody3D"]
-script = ExtResource("1_702dp")
+script = SubResource("GDScript_igdc6")
 type = "Medium Engine"
 mass = 8.0
 health = 2.0
@@ -132,3 +164,16 @@ shape = SubResource("BoxShape3D_fv7uv")
 [node name="CollisionShape3D2" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0.5, 0.5, 0.75)
 shape = SubResource("CylinderShape3D_qghpl")
+
+[node name="GPUParticles3D" type="GPUParticles3D" parent="."]
+transform = Transform3D(-1, 0, -8.74228e-08, 7.64274e-15, -1, -8.74228e-08, -8.74228e-08, -8.74228e-08, 1, 0.5, 0.5, 0.5)
+amount = 20
+lifetime = 0.07
+process_material = SubResource("ParticleProcessMaterial_fsdad")
+draw_pass_1 = SubResource("QuadMesh_n6d0f")
+
+[node name="OmniLight3D" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, 0.5, 0.5, 1.5)
+light_color = Color(0.705882, 0.392157, 0, 1)
+light_energy = 0.5
+shadow_enabled = true

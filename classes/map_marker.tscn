@@ -1,0 +1,37 @@
+[gd_scene load_steps=4 format=3 uid="uid://do0mk003iqx8n"]
+
+[ext_resource type="Texture2D" uid="uid://bn83hknjsblxr" path="res://assets/unfinished_map.png" id="1_6xi5v"]
+
+[sub_resource type="GDScript" id="GDScript_a6aio"]
+script/source = "extends StaticBody3D
+
+
+@export var planet := \"\"
+
+
+func _ready():
+	var data = GameManager.planet_data
+	if data.has(planet):
+		for q in GameManager.quests:
+			if q.destination == planet:
+				$Sprite3D.texture = load(data[planet].target)
+				return
+		$Sprite3D.texture = load(data[planet].map)
+"
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_woo1q"]
+
+[node name="MapMarker" type="StaticBody3D"]
+collision_layer = 4
+collision_mask = 0
+script = SubResource("GDScript_a6aio")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_woo1q")
+
+[node name="Sprite3D" type="Sprite3D" parent="."]
+pixel_size = 0.04
+billboard = 1
+no_depth_test = true
+texture_filter = 0
+texture = ExtResource("1_6xi5v")

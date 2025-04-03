@@ -79,7 +79,7 @@ radius = 1.0
 script = ExtResource("1_s1bpt")
 type = "Medium Fuel Tank"
 mass = 12.0
-health = 3.0
+health = 4.0
 attributes = {
 "Fuel": 80.0
 }

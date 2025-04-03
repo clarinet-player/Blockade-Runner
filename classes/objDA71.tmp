@@ -1,0 +1,31 @@
+[gd_scene load_steps=2 format=3 uid="uid://b3x1gq71qfqfj"]
+
+[sub_resource type="GDScript" id="GDScript_hrimy"]
+script/source = "extends Node
+
+
+
+@export_file var filepath
+@export var distance := 100.0
+@export var delay := 10.0
+@export var max_enemies := 4
+@export var max_wave_size := 1
+@export var max_spawns := 0
+
+@export var enabled := true
+
+var num_spawned := 0
+var spawn_time := 0
+
+
+
+func _physics_process(delta):
+	if !enabled:
+		return
+	
+	if Time.get_ticks_msec() - spawn_time > delay and get_tree().get_nodes_in_group(\"Enemies\").size() < max_enemies:
+		pass
+"
+
+[node name="ObjectSpawner" type="Node"]
+script = SubResource("GDScript_hrimy")

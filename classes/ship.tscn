@@ -1,10 +1,12 @@
-[gd_scene load_steps=7 format=3 uid="uid://c7yejb1twgq1y"]
+[gd_scene load_steps=9 format=3 uid="uid://c7yejb1twgq1y"]
 
 [ext_resource type="Texture2D" uid="uid://c4chsk31llci8" path="res://assets/healthbar_end.png" id="1_tfon3"]
 [ext_resource type="Texture2D" uid="uid://dbigg863742sn" path="res://assets/green_healthbar.png" id="2_aeh01"]
 [ext_resource type="Texture2D" uid="uid://dd8re0wqfaaa7" path="res://assets/grey_healthbar.png" id="3_g6sop"]
 [ext_resource type="Texture2D" uid="uid://dsxc51248xm6j" path="res://assets/blue_healthbar.png" id="4_2jx5a"]
 [ext_resource type="Texture2D" uid="uid://7767gb3rfixl" path="res://assets/crosshair.png" id="4_alqo5"]
+[ext_resource type="Theme" uid="uid://6ftdqmtb2drx" path="res://assets/theme2.tres" id="6_qspgc"]
+[ext_resource type="Texture2D" uid="uid://bhdxhvy4tjrwk" path="res://assets/Mouse_Right_Key_Light.png" id="9_tacqa"]
 
 [sub_resource type="GDScript" id="GDScript_fa4x3"]
 script/source = "extends Node3D
@@ -15,10 +17,10 @@ var ship_name := \"\"
 var color_scheme : Array[StandardMaterial3D]
 var mass := 0.0
 var fuel_capacity := 0.0
+var cargo_capacity := 0.0
 
 var max_speed := 0.0
 var thrust := Vector3.ZERO
-var turning := 1.0
 
 var secondaries := []
 var ready_secondary
@@ -69,49 +71,8 @@ func load_data(data : Dictionary, new_name : String):
 	
 	
 	for part in data[\"Parts\"]:
-		var new_part
-		
-		match part[\"Type\"]:
-			\"Fuel Tank\":
-				new_part = load(\"res://parts/fuel_tank.tscn\").instantiate()
-			\"Cargo\":
-				new_part = load(\"res://parts/cargo.tscn\").instantiate()
-			\"Block\":
-				new_part = load(\"res://parts/block.tscn\").instantiate()
-			\"Engine\":
-				new_part = load(\"res://parts/engine.tscn\").instantiate()
-			\"Gun\":
-				new_part = load(\"res://parts/gun.tscn\").instantiate()
-			\"Slab\":
-				new_part = load(\"res://parts/slab.tscn\").instantiate()
-			\"Wedge\":
-				new_part = load(\"res://parts/wedge.tscn\").instantiate()
-			\"Wedge Engine\":
-				new_part = load(\"res://parts/wedge_engine.tscn\").instantiate()
-			\"Wedge Gun\":
-				new_part = load(\"res://parts/wedge_gun.tscn\").instantiate()
-			\"Slab Engine\":
-				new_part = load(\"res://parts/slab_engine.tscn\").instantiate()
-			\"Slab Gun\":
-				new_part = load(\"res://parts/slab_gun.tscn\").instantiate()
-			\"Rocket Launcher\":
-				new_part = load(\"res://parts/rocket_launcher.tscn\").instantiate()
-			\"Minigun\":
-				new_part = load(\"res://parts/minigun.tscn\").instantiate()
-			\"Medium Fuel Tank\":
-				new_part = load(\"res://parts/medium_fuel_tank.tscn\").instantiate()
-			\"Medium Engine\":
-				new_part = load(\"res://parts/medium_engine.tscn\").instantiate()
-			\"Ammo\":
-				new_part = load(\"res://parts/ammo.tscn\").instantiate()
-			\"Thrusters 2\":
-				new_part = load(\"res://parts/thrusters_2.tscn\").instantiate()
-			\"Thrusters 3\":
-				new_part = load(\"res://parts/thrusters_3.tscn\").instantiate()
-			\"Railgun\":
-				new_part = load(\"res://parts/railgun.tscn\").instantiate()
-		
-		if new_part != null:
+		if GameManager.part_data.has(part[\"Type\"]):
+			var new_part = load(GameManager.part_data[part[\"Type\"]][\"file\"]).instantiate()
 			new_part.color_indexes = part[\"Color Indexes\"]
 			add_child(new_part)
 			new_part.position = Vector3(part[\"Position\"][\"X\"], part[\"Position\"][\"Y\"], part[\"Position\"][\"Z\"])
@@ -142,6 +103,7 @@ func calculate_stats(reset_hp := true):
 		health = 0
 		max_health = 0
 	fuel_capacity = 0
+	cargo_capacity = 0
 	max_speed = 0
 	thrust = Vector3.ZERO
 	attack_damage = 3
@@ -168,11 +130,13 @@ func calculate_stats(reset_hp := true):
 		if part.attributes.has(\"Attack Damage\"):
 			attack_damage += part.attributes[\"Attack Damage\"]
 		
+		if part.attributes.has(\"Cargo\"):
+			cargo_capacity += part.attributes[\"Cargo\"]
+		
 		if \"use_secondary\" in part:
 			secondaries.append(part)
 	
 	thrust = thrust * 20 / mass
-	turning = (thrust.x + thrust.y) / 2
 	max_speed = 10 + thrust.z
 
 
@@ -191,9 +155,8 @@ func reset():
 
 func _input(event):
 	if event is InputEventMouseMotion and GameManager.game_state == GameManager.states.combat:
-			$Camera.global_rotate($Camera.global_basis.y, event.relative.x * -0.001)
-			if $Camera.global_basis.x.is_normalized():
-				$Camera.global_rotate($Camera.global_basis.x, event.relative.y * -0.001)
+		$Camera.global_rotate($Camera.global_basis.y.normalized(), event.relative.x * -0.001)
+		$Camera.global_rotate($Camera.global_basis.x.normalized(), event.relative.y * -0.001)
 
 
 
@@ -203,6 +166,7 @@ func _process(delta):
 	if !GameManager.game_state == GameManager.states.combat:
 		$Healthbar.hide()
 		$Secondary.hide()
+		$\"secondary prompt\".hide()
 		$TextureRect.hide()
 		thrust_directions = Vector3i.ZERO
 		if engine_audio != null:
@@ -210,7 +174,6 @@ func _process(delta):
 		return
 	
 	camera.make_current()
-	
 	
 	$Healthbar.show()
 	$TextureRect.show()
@@ -237,8 +200,8 @@ func _process(delta):
 			$Secondary/TextureRect3.size_flags_stretch_ratio = 1 - highest
 		
 	
-	if !Input.is_action_pressed(\"Free Camera\"):
-		global_basis = global_basis.orthonormalized().slerp($Camera.global_basis.orthonormalized(), delta * turning)
+	if !Input.is_action_pressed(\"Free Camera\") and !destroyed:
+		global_basis = global_basis.orthonormalized().slerp($Camera.global_basis.orthonormalized(), delta * 10)
 	
 	if (Input.get_axis(\"Left\", \"Right\") != 0 or Input.get_axis(\"Forward\", \"Back\") != 0 or Input.get_axis(\"Down\", \"Up\") != 0):
 		if engine_audio == null:
@@ -255,17 +218,21 @@ func _physics_process(delta):
 	if !GameManager.game_state == GameManager.states.combat:
 		return
 	
-	if ready_secondary == null:
-		for part in secondaries:
-			if part != null and Time.get_ticks_msec() - part.use_time > part.cooldown:
-				ready_secondary = part
-				ready_secondary.readied = true
-		
 	if Input.is_action_just_pressed(\"Shoot Secondary\") and ready_secondary != null and Time.get_ticks_msec() - ready_secondary.use_time > ready_secondary.cooldown:
 		secondary_use_time = Time.get_ticks_msec()
 		ready_secondary.use_secondary()
 		ready_secondary.readied = false
 		ready_secondary = null
+		$\"secondary prompt\".hide()
+	
+	if ready_secondary == null:
+		for part in secondaries:
+			if part != null and Time.get_ticks_msec() - part.use_time > part.cooldown:
+				ready_secondary = part
+				ready_secondary.readied = true
+				$\"secondary prompt\".show()
+				$\"secondary prompt/Label\".text = part.type
+				break
 	
 	if Input.is_action_pressed(\"Shoot Primary\") and attack_speed > 0 and Time.get_ticks_msec() - fire_time > 1000 / attack_speed and !destroyed:
 		fire_time = Time.get_ticks_msec()
@@ -276,9 +243,9 @@ func _physics_process(delta):
 		var bullet = load(\"res://classes/bullet.tscn\").instantiate()
 		bullet.player = true
 		bullet.damage = attack_damage
-		bullet.velocity = global_basis.z * -500 + velocity + Vector3(randf_range(-2, 2), randf_range(-2, 2), randf_range(-2, 2))
+		bullet.velocity = camera.global_basis.z * -500 + velocity + Vector3(randf_range(-2, 2), randf_range(-2, 2), randf_range(-2, 2))
 		GameManager.add_child(bullet)
-		bullet.global_position = global_position
+		bullet.global_position = camera.global_position - camera.global_basis.z * 10
 	
 	velocity += global_basis.x * Input.get_axis(\"Left\", \"Right\") * delta * thrust.x
 	velocity += global_basis.z * Input.get_axis(\"Forward\", \"Back\") * delta * thrust.z
@@ -294,7 +261,6 @@ func damage(amount : float, part : Node3D, knockback := Vector3.ZERO, sfx := \"\
 	health -= max(amount, part.health)
 	if health <= 0:
 		thrust = Vector3.ZERO
-		turning = 0
 		destroyed = true
 		GameManager.load_game(GameManager.file_number)
 	
@@ -356,6 +322,7 @@ layout_mode = 2
 texture = ExtResource("1_tfon3")
 
 [node name="Secondary" type="HBoxContainer" parent="."]
+visible = false
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
@@ -389,16 +356,49 @@ custom_minimum_size = Vector2(3.5, 21)
 layout_mode = 2
 texture = ExtResource("1_tfon3")
 
+[node name="secondary prompt" type="HBoxContainer" parent="."]
+visible = false
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -100.0
+offset_top = -133.0
+offset_right = 100.0
+offset_bottom = -31.0
+grow_horizontal = 2
+grow_vertical = 0
+alignment = 1
+
+[node name="Label" type="Label" parent="secondary prompt"]
+layout_mode = 2
+theme = ExtResource("6_qspgc")
+theme_override_colors/font_outline_color = Color(0.25098, 0.25098, 0.25098, 1)
+theme_override_constants/outline_size = 10
+text = "Railgun"
+horizontal_alignment = 1
+
+[node name="TextureRect" type="TextureRect" parent="secondary prompt"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("9_tacqa")
+expand_mode = 1
+
 [node name="TextureRect" type="TextureRect" parent="."]
+custom_minimum_size = Vector2(10, 10)
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -9.0
-offset_top = -9.0
-offset_right = 9.0
-offset_bottom = 9.0
+offset_left = -4.5
+offset_top = -4.5
+offset_right = 4.5
+offset_bottom = 4.5
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("4_alqo5")
+expand_mode = 1

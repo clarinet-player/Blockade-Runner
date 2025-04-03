@@ -1,0 +1,200 @@
+[gd_scene load_steps=14 format=3 uid="uid://bsaavmumvr1yo"]
+
+[ext_resource type="PackedScene" uid="uid://bc760ueqtuvoq" path="res://parts/spike.tscn" id="2_yd2l5"]
+[ext_resource type="PackedScene" uid="uid://d174m4bl8v8yi" path="res://parts/block.tscn" id="3_4cy0j"]
+[ext_resource type="PackedScene" uid="uid://cjs8v4fb0ccpw" path="res://parts/engine.tscn" id="5_n3cvc"]
+[ext_resource type="PackedScene" uid="uid://5nutdgwhgp7b" path="res://parts/half_wedge.tscn" id="6_btdp6"]
+[ext_resource type="PackedScene" uid="uid://dgkoiahu62dvv" path="res://parts/thruster.tscn" id="6_hcgdf"]
+[ext_resource type="AudioStream" uid="uid://c1d20viexe6vr" path="res://assets/electric_scream.mp3" id="7_nb1tt"]
+[ext_resource type="Texture2D" uid="uid://dsxc51248xm6j" path="res://assets/blue_healthbar.png" id="8_st2h0"]
+[ext_resource type="Texture2D" uid="uid://c4chsk31llci8" path="res://assets/healthbar_end.png" id="8_xvrte"]
+[ext_resource type="Texture2D" uid="uid://dd8re0wqfaaa7" path="res://assets/grey_healthbar.png" id="10_en8xj"]
+[ext_resource type="Texture2D" uid="uid://035bxp43r5oo" path="res://assets/blue_arrow.png" id="10_yrdoy"]
+
+[sub_resource type="GDScript" id="GDScript_d400v"]
+script/source = "extends Enemy
+
+
+func _physics_process(delta):
+	if destroyed:
+		if get_node_or_null(\"AudioStremPlayer3D\"):
+			remove_child($AudioStreamPlayer3D)
+		global_translate(velocity * delta)
+		return
+	
+	
+	var ray_query = PhysicsRayQueryParameters3D.create(global_position, global_position + velocity * delta, 0b01)
+	var raycast = get_world_3d().direct_space_state.intersect_ray(ray_query)
+	
+	if !raycast.is_empty() and raycast.collider.get_parent() == Ship:
+		velocity += Ship.global_position.direction_to(global_position) * 30
+		Ship.damage(1 + health * 0.5, raycast.collider, global_position.direction_to(Ship.global_position) * 10)
+		
+		remove_child($AudioStreamPlayer3D)
+		
+		for child in get_children():
+			if child is Node3D:
+				load(\"res://classes/part_ragdoll.tscn\").instantiate().take_part(child)
+		destroyed = true
+		queue_free()
+		return
+	
+	
+	var lead := Vector3.ZERO
+	for i in range(8):
+		var relative_vel = Ship.velocity - velocity
+		var travel_time = global_position.distance_to(Ship.global_position + lead) / projectile_speed
+		lead = lead.lerp(relative_vel * travel_time, 0.9)
+	
+	target_vel = global_position.direction_to(Ship.global_position + lead) * max_speed
+	thrust_directions = global_basis * velocity.direction_to(target_vel) * 8
+	velocity += (velocity.direction_to(target_vel) * thrust * 0.5 * delta).limit_length(velocity.distance_to(target_vel))
+	
+	target_facing = global_position.direction_to(Ship.global_position + lead * 0.75)
+	if target_facing.cross(-global_basis.z).normalized().is_normalized():
+		global_rotate(target_facing.cross(global_basis.z).normalized(), min(acos(target_facing.dot(global_basis.z)), turning * delta))
+	
+	
+	velocity = velocity.limit_length(max_speed)
+	global_translate(velocity * delta)
+"
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sa2ww"]
+albedo_color = Color(0.34902, 0.505882, 0.752941, 1)
+metallic = 0.5
+roughness = 0.27
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_axbsl"]
+albedo_color = Color(0.180392, 0.180392, 0.180392, 1)
+metallic = 0.5
+roughness = 0.61
+
+[node name="Impaler" type="Node3D" groups=["Enemies"]]
+script = SubResource("GDScript_d400v")
+max_speed = 70.0
+thrust = 65.0
+turning = 2.0
+target_distance = Vector2(0, 0)
+health = 7.0
+color_scheme = Array[StandardMaterial3D]([SubResource("StandardMaterial3D_sa2ww"), SubResource("StandardMaterial3D_axbsl")])
+
+[node name="Spike" parent="." instance=ExtResource("2_yd2l5")]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, -2)
+
+[node name="Block" parent="." instance=ExtResource("3_4cy0j")]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, -1)
+
+[node name="Engine" parent="." instance=ExtResource("5_n3cvc")]
+transform = Transform3D(1, 0, 1.74846e-07, 0, 1, 0, -1.74846e-07, 0, 1, 0, -0.5, 1)
+
+[node name="Engine2" parent="." instance=ExtResource("5_n3cvc")]
+transform = Transform3D(1, 0, 1.74846e-07, 0, 1, 0, -1.74846e-07, 0, 1, 0, 0.5, 1)
+
+[node name="HalfWedge" parent="." instance=ExtResource("6_btdp6")]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 1, -1)
+
+[node name="HalfWedge5" parent="." instance=ExtResource("6_btdp6")]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 1, 0)
+
+[node name="HalfWedge2" parent="." instance=ExtResource("6_btdp6")]
+transform = Transform3D(1, -8.74228e-08, -8.74228e-08, -8.74228e-08, -1, 0, -8.74228e-08, 7.64274e-15, -1, 0, -1, -1)
+
+[node name="HalfWedge6" parent="." instance=ExtResource("6_btdp6")]
+transform = Transform3D(1, -8.74228e-08, -8.74228e-08, -8.74228e-08, -1, 0, -8.74228e-08, 7.64274e-15, -1, 0, -1, 0)
+
+[node name="HalfWedge3" parent="." instance=ExtResource("6_btdp6")]
+transform = Transform3D(-1.31134e-07, -1, -8.74228e-08, -1, 1.31134e-07, 0, 1.14641e-14, 8.74228e-08, -1, -1, 0, -1)
+
+[node name="HalfWedge9" parent="." instance=ExtResource("6_btdp6")]
+transform = Transform3D(-1.31134e-07, -1, 8.74228e-08, 1, -1.31134e-07, 8.74228e-08, -8.74228e-08, 8.74228e-08, 1, -1, 0, 1.5)
+
+[node name="HalfWedge11" parent="." instance=ExtResource("6_btdp6")]
+transform = Transform3D(-1.31134e-07, -1, 8.74228e-08, -1, 1.31134e-07, -1.74846e-07, 1.74846e-07, -8.74228e-08, -1, -1, 0, 0.5)
+
+[node name="HalfWedge4" parent="." instance=ExtResource("6_btdp6")]
+transform = Transform3D(2.18557e-07, 1, -8.74228e-08, 1, -2.18557e-07, 0, -1.91069e-14, -8.74228e-08, -1, 1, 0, -1)
+
+[node name="HalfWedge10" parent="." instance=ExtResource("6_btdp6")]
+transform = Transform3D(2.18557e-07, 1, 8.74228e-08, -1, 2.18557e-07, -8.74228e-08, -8.74228e-08, -8.74228e-08, 1, 1, 0, 1.5)
+
+[node name="HalfWedge12" parent="." instance=ExtResource("6_btdp6")]
+transform = Transform3D(2.18557e-07, 1, 8.74228e-08, 1, -2.18557e-07, 1.74846e-07, 1.74846e-07, 8.74228e-08, -1, 1, 0, 0.5)
+
+[node name="Thruster" parent="." instance=ExtResource("6_hcgdf")]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 0, 0, 0)
+
+[node name="Thruster2" parent="." instance=ExtResource("6_hcgdf")]
+transform = Transform3D(4.37114e-08, 8.74228e-08, -1, 3.82137e-15, -1, -8.74228e-08, -1, 0, -4.37114e-08, 0, 0, 0)
+
+[node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("7_nb1tt")
+attenuation_model = 3
+autoplay = true
+max_distance = 250.0
+panning_strength = 1.5
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -39.0
+offset_top = -6.0
+offset_right = 39.0
+offset_bottom = 6.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer"]
+custom_minimum_size = Vector2(2, 12)
+layout_mode = 2
+texture = ExtResource("8_xvrte")
+
+[node name="RedHealth" type="TextureRect" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+texture = ExtResource("8_st2h0")
+
+[node name="GreyHeath" type="TextureRect" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+texture = ExtResource("10_en8xj")
+
+[node name="TextureRect2" type="TextureRect" parent="HBoxContainer"]
+custom_minimum_size = Vector2(2, 12)
+layout_mode = 2
+texture = ExtResource("8_xvrte")
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(20, 20)
+
+[node name="TextureRect" type="TextureRect" parent="Control"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -470.0
+offset_right = 12.0
+offset_bottom = -438.0
+grow_horizontal = 2
+grow_vertical = 2
+rotation = 0.785398
+texture = ExtResource("10_yrdoy")

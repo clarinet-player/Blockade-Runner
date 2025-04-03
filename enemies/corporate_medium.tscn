@@ -1,120 +1,196 @@
-[gd_scene load_steps=9 format=3 uid="uid://bxqtyvxqrgw5q"]
+[gd_scene load_steps=13 format=3 uid="uid://bxqtyvxqrgw5q"]
 
-[ext_resource type="PackedScene" uid="uid://d3hrs35a4dnui" path="res://classes/enemy_base.tscn" id="1_nf4qt"]
 [ext_resource type="PackedScene" uid="uid://duxiwxsn8m8l7" path="res://parts/slab_gun.tscn" id="2_y0mhc"]
 [ext_resource type="PackedScene" uid="uid://pbjgws1bkxqv" path="res://parts/fuel_tank.tscn" id="3_6h1tr"]
 [ext_resource type="PackedScene" uid="uid://d174m4bl8v8yi" path="res://parts/block.tscn" id="3_srayb"]
 [ext_resource type="PackedScene" uid="uid://t0agq3u1vvkq" path="res://parts/slab_engine.tscn" id="5_c8s6j"]
+[ext_resource type="Texture2D" uid="uid://c4chsk31llci8" path="res://assets/healthbar_end.png" id="6_8cxlm"]
 [ext_resource type="PackedScene" uid="uid://cjs8v4fb0ccpw" path="res://parts/engine.tscn" id="6_nmbt0"]
+[ext_resource type="Texture2D" uid="uid://cbf7rt1d6b0j6" path="res://assets/red_healthbar.png" id="7_f0753"]
+[ext_resource type="Texture2D" uid="uid://dd8re0wqfaaa7" path="res://assets/grey_healthbar.png" id="8_wwxkc"]
+[ext_resource type="Texture2D" uid="uid://7skg0yf8gas4" path="res://assets/red_arrow.png" id="9_ipf4p"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3t2ek"]
-albedo_color = Color(0.729412, 0.729412, 0.729412, 1)
-roughness = 0.97
+[sub_resource type="GDScript" id="GDScript_qnjvl"]
+script/source = "extends \"res://classes/enemy_base.gd\"
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ijwhc"]
-albedo_color = Color(0.678431, 0.678431, 0.678431, 1)
+
+func custom_process():
+	if Time.get_ticks_msec() - fire_time > (1.0 / attack_speed) * 1000 and !destroyed and get_parent().master_tokens > 0:
+		fire_time = Time.get_ticks_msec()
+		get_parent().master_tokens -= 1
+		
+		var missile = load(\"res://classes/missile.tscn\").instantiate()
+		missile.dir = global_basis.y
+		missile.target = Ship
+		missile.damage = attack_damage
+		GameManager.add_child(missile)
+		missile.global_position = global_position
+"
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_r8e42"]
+albedo_color = Color(0.752941, 0.752941, 0.752941, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vm0lb"]
+albedo_color = Color(0.835294, 0.835294, 0.835294, 1)
 metallic = 0.86
 roughness = 0.3
 
-[node name="Corporate medium" instance=ExtResource("1_nf4qt")]
+[node name="Corporate medium" type="Node3D" groups=["Enemies"]]
+script = SubResource("GDScript_qnjvl")
 max_speed = 15.0
 thrust = 9.0
 turning = 0.75
 target_distance = Vector2(100, 300)
-innacuracy = 0.5
 attack_speed = 0.25
 attack_damage = 2.5
-homing = true
 projectile_speed = 50.0
 health = 16.0
-color_scheme = Array[StandardMaterial3D]([SubResource("StandardMaterial3D_3t2ek"), SubResource("StandardMaterial3D_ijwhc")])
+color_scheme = Array[StandardMaterial3D]([SubResource("StandardMaterial3D_r8e42"), SubResource("StandardMaterial3D_vm0lb")])
 
-[node name="SlabGun" parent="." index="0" instance=ExtResource("2_y0mhc")]
+[node name="SlabGun" parent="." instance=ExtResource("2_y0mhc")]
 transform = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, -1, 0, -3)
 color_indexes = [0, 1]
 
-[node name="SlabGun2" parent="." index="1" instance=ExtResource("2_y0mhc")]
+[node name="SlabGun2" parent="." instance=ExtResource("2_y0mhc")]
 transform = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, 1, 0, -3)
 color_indexes = [0, 1]
 
-[node name="Block" parent="." index="2" instance=ExtResource("3_srayb")]
+[node name="Block" parent="." instance=ExtResource("3_srayb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, -1)
 
-[node name="Block2" parent="." index="3" instance=ExtResource("3_srayb")]
+[node name="Block2" parent="." instance=ExtResource("3_srayb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, -1)
 
-[node name="Block8" parent="." index="4" instance=ExtResource("3_srayb")]
+[node name="Block8" parent="." instance=ExtResource("3_srayb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, -2)
 
-[node name="Block7" parent="." index="5" instance=ExtResource("3_srayb")]
+[node name="Block7" parent="." instance=ExtResource("3_srayb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -1)
 
-[node name="Block10" parent="." index="6" instance=ExtResource("3_srayb")]
+[node name="Block10" parent="." instance=ExtResource("3_srayb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -2)
 
-[node name="Block11" parent="." index="7" instance=ExtResource("3_srayb")]
+[node name="Block11" parent="." instance=ExtResource("3_srayb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, -1)
 
-[node name="Block12" parent="." index="8" instance=ExtResource("3_srayb")]
+[node name="Block12" parent="." instance=ExtResource("3_srayb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, -2)
 
-[node name="Block15" parent="." index="9" instance=ExtResource("3_srayb")]
+[node name="Block15" parent="." instance=ExtResource("3_srayb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -3)
 
-[node name="Block16" parent="." index="10" instance=ExtResource("3_srayb")]
+[node name="Block16" parent="." instance=ExtResource("3_srayb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, -3)
 
-[node name="Block9" parent="." index="11" instance=ExtResource("3_srayb")]
+[node name="Block9" parent="." instance=ExtResource("3_srayb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, -2)
 
-[node name="FuelTank" parent="." index="12" instance=ExtResource("3_6h1tr")]
+[node name="FuelTank" parent="." instance=ExtResource("3_6h1tr")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 2)
 color_indexes = [1, 0]
 
-[node name="FuelTank2" parent="." index="13" instance=ExtResource("3_6h1tr")]
+[node name="FuelTank2" parent="." instance=ExtResource("3_6h1tr")]
 transform = Transform3D(-1, 8.74228e-08, 0, -8.74228e-08, -1, 0, 0, 0, 1, 0, 0.5, 2)
 color_indexes = [1, 0]
 
-[node name="SlabEngine" parent="." index="14" instance=ExtResource("5_c8s6j")]
+[node name="SlabEngine" parent="." instance=ExtResource("5_c8s6j")]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0.5, 0)
-color_indexes = [0, 1]
 
-[node name="SlabEngine6" parent="." index="15" instance=ExtResource("5_c8s6j")]
+[node name="SlabEngine6" parent="." instance=ExtResource("5_c8s6j")]
 transform = Transform3D(1, 0, 0, 0, 1.31134e-07, -1, 0, 1, 1.31134e-07, 0, -0.5, 0)
-color_indexes = [0, 1]
 
-[node name="Block4" parent="." index="16" instance=ExtResource("3_srayb")]
+[node name="Block4" parent="." instance=ExtResource("3_srayb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 1)
 
-[node name="Block13" parent="." index="17" instance=ExtResource("3_srayb")]
+[node name="Block13" parent="." instance=ExtResource("3_srayb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 2)
 
-[node name="Block5" parent="." index="18" instance=ExtResource("3_srayb")]
+[node name="Block5" parent="." instance=ExtResource("3_srayb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1)
 
-[node name="Block14" parent="." index="19" instance=ExtResource("3_srayb")]
+[node name="Block14" parent="." instance=ExtResource("3_srayb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 2)
 
-[node name="SlabEngine7" parent="." index="20" instance=ExtResource("5_c8s6j")]
+[node name="SlabEngine7" parent="." instance=ExtResource("5_c8s6j")]
 transform = Transform3D(1.91069e-15, -1, 0, 1, 1.91069e-15, -4.37114e-08, 4.37114e-08, 0, 1, 0.99392, 0.00415516, 2.9983)
-color_indexes = [0, 1]
 
-[node name="SlabEngine9" parent="." index="21" instance=ExtResource("5_c8s6j")]
+[node name="SlabEngine9" parent="." instance=ExtResource("5_c8s6j")]
 transform = Transform3D(4.37114e-08, 4.37114e-08, 1, 1, 1.91069e-15, -4.37114e-08, -3.82138e-15, 1, -4.37114e-08, 0.99392, 0.00415516, -0.00169802)
-color_indexes = [0, 1]
 
-[node name="SlabEngine10" parent="." index="22" instance=ExtResource("5_c8s6j")]
+[node name="SlabEngine10" parent="." instance=ExtResource("5_c8s6j")]
 transform = Transform3D(-4.37114e-08, -1.31134e-07, -1, 1, 1.91069e-15, -4.37114e-08, 7.64275e-15, -1, 1.31134e-07, -1.00608, 0.00415516, -0.00169802)
-color_indexes = [0, 1]
 
-[node name="SlabEngine8" parent="." index="23" instance=ExtResource("5_c8s6j")]
+[node name="SlabEngine8" parent="." instance=ExtResource("5_c8s6j")]
 transform = Transform3D(1.91069e-15, -1, 0, 1, 1.91069e-15, -4.37114e-08, 4.37114e-08, 0, 1, -1, 0, 3)
-color_indexes = [0, 1]
 
-[node name="Engine" parent="." index="24" instance=ExtResource("6_nmbt0")]
+[node name="Engine" parent="." instance=ExtResource("6_nmbt0")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 3)
-color_indexes = [0, 1]
 
-[node name="Engine2" parent="." index="25" instance=ExtResource("6_nmbt0")]
+[node name="Engine2" parent="." instance=ExtResource("6_nmbt0")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 3)
-color_indexes = [0, 1]
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -39.0
+offset_top = -6.0
+offset_right = 39.0
+offset_bottom = 6.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer"]
+custom_minimum_size = Vector2(2, 12)
+layout_mode = 2
+texture = ExtResource("6_8cxlm")
+
+[node name="RedHealth" type="TextureRect" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+texture = ExtResource("7_f0753")
+
+[node name="GreyHeath" type="TextureRect" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+texture = ExtResource("8_wwxkc")
+
+[node name="TextureRect2" type="TextureRect" parent="HBoxContainer"]
+custom_minimum_size = Vector2(2, 12)
+layout_mode = 2
+texture = ExtResource("6_8cxlm")
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(20, 20)
+
+[node name="TextureRect" type="TextureRect" parent="Control"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -470.0
+offset_right = 12.0
+offset_bottom = -438.0
+grow_horizontal = 2
+grow_vertical = 2
+rotation = 0.785398
+texture = ExtResource("9_ipf4p")

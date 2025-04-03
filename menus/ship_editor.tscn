@@ -1,0 +1,1035 @@
+[gd_scene load_steps=19 format=3 uid="uid://c3s11auqk32he"]
+
+[ext_resource type="Theme" uid="uid://6ftdqmtb2drx" path="res://assets/theme2.tres" id="1_l3kra"]
+[ext_resource type="Texture2D" uid="uid://ecx4yi0jejil" path="res://assets/wasdqe.png" id="2_q3ipb"]
+[ext_resource type="Texture2D" uid="uid://cp7dy13g8hbo8" path="res://assets/Mouse_Left_Key_Light.png" id="3_hml7m"]
+
+[sub_resource type="GDScript" id="GDScript_krd1n"]
+script/source = "extends Node3D
+
+
+
+var selected_item : Node3D
+var dragging := false
+
+
+
+@onready var camera := $camera/Camera3D
+
+
+
+func _ready():
+	camera.make_current()
+	load_ship()
+
+
+
+func _unhandled_input(event):
+	if event is InputEventMouseMotion and Input.is_action_pressed(\"Shoot Secondary\"):
+		$camera.global_rotate(Vector3.UP, event.relative.x * -0.002)
+		$camera.global_rotate($camera.global_basis.z.normalized(), event.relative.y * -0.002)
+	
+	if event is InputEventKey and event.keycode == KEY_BACKSPACE:
+		if selected_item != null and !selected_item is Camera3D:
+			selected_item.free()
+			$\"part list\".recalculate()
+			deselect()
+	
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_WHEEL_UP:
+		camera.position.x = move_toward(camera.position.x, -2.0, 0.5)
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+		camera.position.x = move_toward(camera.position.x, -20.0, 0.5)
+	
+	
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		if dragging:
+			selected_item.global_position = selected_item.global_position.snapped(Vector3(1, 1, 1))
+			dragging = false
+			selected_item.collision_layer = 0b0001
+		else:
+			var from = camera.project_ray_origin(get_viewport().get_mouse_position())
+			var to = from + camera.project_ray_normal(get_viewport().get_mouse_position()) * 100
+			var ray_query = PhysicsRayQueryParameters3D.create(from, to, 0b1)
+			var raycast = get_world_3d().direct_space_state.intersect_ray(ray_query)
+				
+			if raycast.is_empty():
+				deselect()
+			else:
+				if raycast.collider == $\"ship camera\":
+					select_item(Ship.camera)
+				else:
+					select_item(raycast.collider)
+
+
+
+func _process(delta):
+	if selected_item == null:
+		$\"rotate prompt\".hide()
+		return
+	$\"rotate prompt\".show()
+	
+	if dragging:
+		var from = camera.project_ray_origin(get_viewport().get_mouse_position())
+		var to = from + camera.project_ray_normal(get_viewport().get_mouse_position()) * 100
+		var ray_query = PhysicsRayQueryParameters3D.create(from, to, 0b1)
+		var raycast = get_world_3d().direct_space_state.intersect_ray(ray_query)
+		
+		if raycast.is_empty() or raycast.collider == $\"ship camera\":
+			selected_item.global_position = camera.global_position + camera.project_ray_normal(get_viewport().get_mouse_position()) * camera.global_position.distance_to(Ship.global_position)
+		else:
+			selected_item.global_position = (raycast.position + raycast.normal * 0.99).snapped(Vector3(1, 1, 1))
+	
+	if Input.is_action_just_pressed(\"Forward\"):
+		selected_item.global_rotate(global_basis.x, -PI / 2)
+	if Input.is_action_just_pressed(\"Back\"):
+		selected_item.global_rotate(global_basis.x, PI / 2)
+	if Input.is_action_just_pressed(\"Left\"):
+		selected_item.global_rotate(global_basis.y, PI / 2)
+	if Input.is_action_just_pressed(\"Right\"):
+		selected_item.global_rotate(global_basis.y, -PI / 2)
+	if Input.is_action_just_pressed(\"Roll Left\"):
+		selected_item.global_rotate(global_basis.z, PI / 2)
+	if Input.is_action_just_pressed(\"Roll Right\"):
+		selected_item.global_rotate(global_basis.z, -PI / 2)
+
+
+
+func load_ship():
+	$\"ship camera\".global_position = Ship.camera.global_position
+
+
+
+func new_ship():
+	$unsaved.hide()
+	Ship.load_data({\"Colors\": [{\"R\": 1, \"G\": 1, \"B\": 1, \"Roughness\": 1, \"Metallic\": 0}], \"Parts\": []}, \"Untitled Ship\")
+	deselect()
+
+
+
+func select_item(item : Node3D):
+	selected_item = item
+	if !item is Camera3D:
+		$\"part editor\".load_materials(item)
+
+
+
+func deselect():
+	selected_item = null
+	dragging = false
+	$\"part editor\".hide()
+
+
+
+func add_part(path : String):
+	var part = load(path).instantiate()
+	Ship.add_child(part)
+	
+	select_item(part)
+	move_part()
+
+
+func move_part():
+	dragging = true
+	selected_item.collision_layer = 0b0000
+
+
+
+func _on_exit_button_down():
+	GameManager.start_planet()
+
+"
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_jbsxv"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_chj3q"]
+sky_material = SubResource("ProceduralSkyMaterial_jbsxv")
+
+[sub_resource type="Environment" id="Environment_a12j6"]
+background_mode = 2
+sky = SubResource("Sky_chj3q")
+tonemap_mode = 2
+glow_enabled = true
+
+[sub_resource type="GDScript" id="GDScript_x7t0q"]
+script/source = "extends VBoxContainer
+
+
+
+var available_parts := {}
+
+
+
+func _ready():
+	for part in GameManager.parts.keys():
+		var new = $HBoxContainer.duplicate()
+		add_child(new)
+		new.show()
+		new.name = part
+		new.get_node(\"Label\").text = part
+		new.gui_input.connect(add_part.bind(part))
+		available_parts[part] = GameManager.parts[part]
+	
+	$HBoxContainer.hide()
+	recalculate()
+
+
+
+func add_part(event, part : String):
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed and available_parts[part] > 0:
+		get_parent().call_deferred(\"add_part\", GameManager.part_data[part].file)
+		call_deferred(\"recalculate\")
+
+
+
+func recalculate():
+	for part in GameManager.parts.keys():
+		available_parts[part] = GameManager.parts[part]
+	
+	for child in Ship.get_children():
+		if \"type\" in child:
+			if available_parts.has(child.type):
+				available_parts[child.type] -= 1
+			else:
+				available_parts[child.type] = -1
+	
+	for child in get_children():
+		if child.name in available_parts:
+			child.get_node(\"Label2\").text = \"x\" + str(available_parts[child.name])
+"
+
+[sub_resource type="GDScript" id="GDScript_xgemo"]
+script/source = "extends VBoxContainer
+
+
+
+var selected_part : Node3D
+var current_index : int
+
+
+
+func load_materials(part : Node3D):
+	show()
+	$Label2.hide()
+	$HBoxContainer2.hide()
+	current_index = -1
+	selected_part = part
+	
+	for child in $HBoxContainer.get_children():
+		if child != $HBoxContainer/ColorRect:
+			child.queue_free()
+	
+	var index = 0
+	for color in part.color_indexes:
+		var mat = Ship.color_scheme[color]
+		if index == 0:
+			$HBoxContainer/ColorRect.color = Color(mat.albedo_color.r, mat.albedo_color.g, mat.albedo_color.b)
+			$HBoxContainer/ColorRect.gui_input.connect(input_part.bind(0))
+		else:
+			var rect = $HBoxContainer/ColorRect.duplicate(0)
+			rect.color = Color(mat.albedo_color.r, mat.albedo_color.g, mat.albedo_color.b)
+			$HBoxContainer.add_child(rect)
+			rect.gui_input.connect(input_part.bind(part.color_indexes.find(color)))
+		index += 1
+	
+	$Name.text = part.type
+	$Stats.text = \"Mass: \" + str(part.mass) + \" HP: \" + str(part.health)
+	if \"Thrust\" in part.attributes:
+		$Attributes.show()
+		$Attributes.text = \"Thrust: \" + str(part.attributes.Thrust.length())
+	elif !part.attributes.is_empty():
+		$Attributes.show()
+		$Attributes.text = part.attributes.keys()[0] + \": \" + str(part.attributes[part.attributes.keys()[0]])
+	else:
+		$Attributes.hide()
+
+
+
+func input_part(event, index):
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		current_index = index
+		
+		for child in $HBoxContainer2.get_children():
+			if child != $HBoxContainer2/ColorRect and child != $HBoxContainer2/Button:
+				child.queue_free()
+		
+		for mat in Ship.color_scheme:
+			if mat == Ship.color_scheme[0]:
+				$HBoxContainer2/ColorRect.color = Color(mat.albedo_color.r, mat.albedo_color.g, mat.albedo_color.b)
+				$HBoxContainer2/ColorRect.gui_input.connect(input_picker.bind(0))
+			else:
+				var rect = $HBoxContainer2/ColorRect.duplicate(0)
+				$HBoxContainer2.add_child(rect)
+				rect.color = Color(mat.albedo_color.r, mat.albedo_color.g, mat.albedo_color.b)
+				rect.gui_input.connect(input_picker.bind(Ship.color_scheme.find(mat)))
+		
+		$HBoxContainer2.move_child($HBoxContainer2/Button, -1)
+		$Label2.show()
+		$HBoxContainer2.show()
+
+
+
+func input_picker(event, index):
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		
+		selected_part.color_indexes[current_index] = index
+		selected_part.load_materials()
+		load_materials(selected_part)
+
+
+
+func new_color():
+	$\"../color creator\".new_material()
+	await $\"../color creator\".hidden
+	selected_part.color_indexes[current_index] = Ship.color_scheme.size() - 1
+	selected_part.load_materials()
+	load_materials(selected_part)
+"
+
+[sub_resource type="GDScript" id="GDScript_0ltdx"]
+script/source = "extends VBoxContainer
+
+
+
+var mat : StandardMaterial3D
+
+var r := 1.0
+var g := 1.0
+var b := 1.0
+var roughness := 1.0
+var metallic := 0.0
+
+
+
+func _ready():
+	$Button.button_down.connect(hide)
+
+
+
+func load_material(index : int):
+	show()
+	mat = Ship.color_scheme[index]
+	$SubViewportContainer/SubViewport/MeshInstance3D.mesh.material = mat
+	
+	r = mat.albedo_color.r
+	g = mat.albedo_color.g
+	b = mat.albedo_color.b
+	roughness = mat.roughness
+	metallic = mat.metallic
+	
+	$red/HSlider.value = r
+	$green/HSlider.value = g
+	$blue/HSlider.value = b
+	$roughness/HSlider.value = roughness
+	$metallic/HSlider.value = metallic
+
+
+
+func new_material():
+	show()
+	mat = StandardMaterial3D.new()
+	Ship.color_scheme.append(mat)
+	$SubViewportContainer/SubViewport/MeshInstance3D.mesh.material = mat
+	
+	r = 1
+	g = 1
+	b = 1
+	roughness = 1
+	metallic = 0
+	
+	$red/HSlider.value = r
+	$green/HSlider.value = g
+	$blue/HSlider.value = b
+	$roughness/HSlider.value = roughness
+	$metallic/HSlider.value = metallic
+
+
+
+func _process(delta):
+	if !visible:
+		return
+	
+	r = $red/HSlider.value
+	g = $green/HSlider.value
+	b = $blue/HSlider.value
+	roughness = $roughness/HSlider.value
+	metallic = $metallic/HSlider.value
+	
+	mat.albedo_color.r = r
+	mat.albedo_color.g = g
+	mat.albedo_color.b = b
+	mat.roughness = roughness
+	mat.metallic = metallic
+"
+
+[sub_resource type="Environment" id="Environment_dqbsr"]
+ambient_light_source = 3
+
+[sub_resource type="SphereMesh" id="SphereMesh_1tw3i"]
+
+[sub_resource type="GDScript" id="GDScript_13jre"]
+script/source = "extends VBoxContainer
+
+
+
+func _ready():
+	update()
+
+
+
+func update():
+	for child in get_children():
+		if child == $HBoxContainer:
+			continue
+		child.queue_free()
+	
+	for key in GameManager.ships.keys():
+		var button = Button.new()
+		button.theme = load(\"res://assets/theme2.tres\")
+		button.text = key
+		button.button_down.connect(load_file.bind([GameManager.read_file(GameManager.ships[key]), key]))
+		$\".\".add_child(button)
+
+
+func load_file(file : Array):
+	hide()
+	Ship.load_data(file[0], file[1])
+	get_parent().load_ship()
+	$\"../save file\".update()
+
+"
+
+[sub_resource type="GDScript" id="GDScript_3b3c2"]
+script/source = "extends HBoxContainer
+
+
+func _ready():
+	update()
+
+func update():
+	$LineEdit.text = Ship.ship_name
+
+
+func _on_save_button_down():
+	if FileAccess.file_exists(\"user://\" + $LineEdit.text + \".json\"):
+		$\"../overwrite\".show()
+		hide()
+	else:
+		save()
+		hide()
+
+
+func save():
+	Ship.ship_name = $LineEdit.text
+	GameManager.write_file(\"user://\" + $LineEdit.text + \".json\", Ship.save_data())
+	GameManager.ships.merge({$LineEdit.text: \"user://\" + $LineEdit.text + \".json\"})
+	GameManager.write_file(\"user://ship_saves.json\", GameManager.ships)
+	$\"../overwrite\".hide()
+	$\"../saved\".show()
+	await get_tree().create_timer(1.0).timeout
+	$\"../saved\".hide()
+	$\"../load file\".update()
+
+
+func _on_cancel_button_down():
+	hide()
+"
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tixkw"]
+shading_mode = 0
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_n2a4a"]
+_surfaces = [{
+"aabb": AABB(-0.081896, -1.10042, -0.081896, 0.163792, 0.800429, 0.163792),
+"format": 34896613377,
+"index_count": 276,
+"index_data": PackedByteArray(3, 0, 2, 0, 0, 0, 5, 0, 4, 0, 7, 0, 5, 0, 2, 0, 4, 0, 7, 0, 6, 0, 5, 0, 12, 0, 11, 0, 10, 0, 14, 0, 13, 0, 11, 0, 30, 0, 29, 0, 47, 0, 14, 0, 36, 0, 37, 0, 3, 0, 28, 0, 29, 0, 7, 0, 31, 0, 32, 0, 12, 0, 34, 0, 35, 0, 16, 0, 38, 0, 39, 0, 27, 0, 46, 0, 47, 0, 39, 0, 38, 0, 47, 0, 31, 0, 30, 0, 47, 0, 40, 0, 39, 0, 47, 0, 32, 0, 31, 0, 47, 0, 41, 0, 40, 0, 47, 0, 33, 0, 32, 0, 47, 0, 42, 0, 41, 0, 47, 0, 34, 0, 33, 0, 47, 0, 43, 0, 42, 0, 47, 0, 35, 0, 34, 0, 47, 0, 44, 0, 43, 0, 47, 0, 36, 0, 35, 0, 47, 0, 28, 0, 27, 0, 47, 0, 45, 0, 44, 0, 47, 0, 37, 0, 36, 0, 47, 0, 29, 0, 28, 0, 47, 0, 46, 0, 45, 0, 47, 0, 38, 0, 37, 0, 47, 0, 1, 0, 3, 0, 0, 0, 3, 0, 4, 0, 2, 0, 8, 0, 7, 0, 9, 0, 8, 0, 6, 0, 7, 0, 10, 0, 9, 0, 12, 0, 10, 0, 8, 0, 9, 0, 15, 0, 14, 0, 16, 0, 15, 0, 13, 0, 14, 0, 12, 0, 14, 0, 11, 0, 17, 0, 16, 0, 18, 0, 17, 0, 15, 0, 16, 0, 19, 0, 18, 0, 20, 0, 19, 0, 17, 0, 18, 0, 21, 0, 20, 0, 22, 0, 21, 0, 19, 0, 20, 0, 23, 0, 22, 0, 24, 0, 23, 0, 21, 0, 22, 0, 25, 0, 24, 0, 26, 0, 25, 0, 23, 0, 24, 0, 34, 0, 9, 0, 33, 0, 34, 0, 12, 0, 9, 0, 0, 0, 26, 0, 1, 0, 0, 0, 25, 0, 26, 0, 13, 0, 10, 0, 11, 0, 10, 0, 6, 0, 8, 0, 6, 0, 2, 0, 5, 0, 2, 0, 25, 0, 0, 0, 25, 0, 21, 0, 23, 0, 21, 0, 17, 0, 19, 0, 17, 0, 13, 0, 15, 0, 13, 0, 6, 0, 10, 0, 6, 0, 25, 0, 2, 0, 25, 0, 17, 0, 21, 0, 17, 0, 6, 0, 13, 0, 6, 0, 17, 0, 25, 0, 40, 0, 16, 0, 39, 0, 40, 0, 18, 0, 16, 0, 44, 0, 26, 0, 24, 0, 44, 0, 45, 0, 26, 0, 38, 0, 14, 0, 37, 0, 38, 0, 16, 0, 14, 0, 22, 0, 42, 0, 43, 0, 26, 0, 45, 0, 46, 0, 30, 0, 3, 0, 29, 0, 30, 0, 4, 0, 3, 0, 41, 0, 18, 0, 40, 0, 41, 0, 20, 0, 18, 0, 33, 0, 7, 0, 32, 0, 33, 0, 9, 0, 7, 0, 43, 0, 24, 0, 22, 0, 43, 0, 44, 0, 24, 0, 36, 0, 12, 0, 35, 0, 36, 0, 14, 0, 12, 0, 28, 0, 1, 0, 27, 0, 28, 0, 3, 0, 1, 0, 46, 0, 1, 0, 26, 0, 46, 0, 27, 0, 1, 0, 31, 0, 4, 0, 30, 0, 31, 0, 7, 0, 4, 0, 41, 0, 22, 0, 20, 0, 41, 0, 42, 0, 22, 0),
+"lods": [0.0425878, PackedByteArray(4, 0, 6, 0, 0, 0, 1, 0, 4, 0, 0, 0, 6, 0, 4, 0, 20, 0, 25, 0, 6, 0, 20, 0, 0, 0, 25, 0, 20, 0, 0, 0, 20, 0, 1, 0, 30, 0, 29, 0, 47, 0, 29, 0, 28, 0, 47, 0, 28, 0, 27, 0, 47, 0, 31, 0, 30, 0, 47, 0, 32, 0, 31, 0, 47, 0, 33, 0, 32, 0, 47, 0, 34, 0, 33, 0, 47, 0, 35, 0, 34, 0, 47, 0, 36, 0, 35, 0, 47, 0, 37, 0, 36, 0, 47, 0, 38, 0, 37, 0, 47, 0, 39, 0, 38, 0, 47, 0, 40, 0, 39, 0, 47, 0, 41, 0, 40, 0, 47, 0, 42, 0, 41, 0, 47, 0, 43, 0, 42, 0, 47, 0, 44, 0, 43, 0, 47, 0, 45, 0, 44, 0, 47, 0, 46, 0, 45, 0, 47, 0, 27, 0, 46, 0, 47, 0, 20, 0, 36, 0, 37, 0, 36, 0, 20, 0, 35, 0, 38, 0, 20, 0, 37, 0, 20, 0, 34, 0, 35, 0, 20, 0, 38, 0, 39, 0, 34, 0, 20, 0, 33, 0, 40, 0, 20, 0, 39, 0, 33, 0, 20, 0, 32, 0, 41, 0, 20, 0, 40, 0, 41, 0, 42, 0, 20, 0, 20, 0, 42, 0, 43, 0, 43, 0, 44, 0, 20, 0, 44, 0, 45, 0, 20, 0, 20, 0, 31, 0, 32, 0, 20, 0, 45, 0, 46, 0, 46, 0, 1, 0, 20, 0, 46, 0, 27, 0, 1, 0, 31, 0, 20, 0, 4, 0, 31, 0, 4, 0, 30, 0, 30, 0, 4, 0, 29, 0, 4, 0, 28, 0, 29, 0, 28, 0, 4, 0, 1, 0, 28, 0, 1, 0, 27, 0, 6, 0, 25, 0, 0, 0)],
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 48,
+"vertex_data": PackedByteArray(84, 119, 254, 255, 13, 178, 0, 0, 255, 127, 25, 64, 48, 178, 0, 0, 251, 92, 254, 255, 205, 164, 0, 0, 101, 107, 25, 64, 111, 174, 0, 0, 121, 88, 25, 64, 73, 159, 0, 0, 6, 80, 254, 255, 121, 143, 0, 0, 206, 77, 254, 255, 255, 127, 0, 0, 241, 77, 25, 64, 170, 136, 0, 0, 130, 79, 254, 255, 54, 114, 0, 0, 6, 80, 25, 64, 133, 112, 0, 0, 121, 88, 254, 255, 181, 96, 0, 0, 101, 107, 254, 255, 143, 81, 0, 0, 251, 92, 25, 64, 49, 91, 0, 0, 255, 127, 254, 255, 206, 77, 0, 0, 84, 119, 25, 64, 241, 77, 0, 0, 67, 146, 254, 255, 152, 80, 0, 0, 153, 148, 25, 64, 143, 81, 0, 0, 101, 166, 254, 255, 87, 95, 0, 0, 133, 167, 25, 64, 181, 96, 0, 0, 248, 175, 254, 255, 133, 112, 0, 0, 124, 176, 25, 64, 54, 114, 0, 0, 13, 178, 254, 255, 170, 136, 0, 0, 143, 177, 25, 64, 37, 139, 0, 0, 133, 167, 254, 255, 73, 159, 0, 0, 101, 166, 25, 64, 167, 160, 0, 0, 153, 148, 254, 255, 111, 174, 0, 0, 67, 146, 25, 64, 102, 175, 0, 0, 255, 127, 25, 64, 255, 255, 0, 0, 170, 90, 25, 64, 16, 251, 0, 0, 226, 56, 25, 64, 108, 234, 0, 0, 149, 28, 25, 64, 149, 209, 0, 0, 238, 4, 25, 64, 84, 165, 0, 0, 0, 0, 25, 64, 255, 127, 0, 0, 238, 4, 25, 64, 170, 90, 0, 0, 149, 28, 25, 64, 105, 46, 0, 0, 226, 56, 25, 64, 146, 21, 0, 0, 170, 90, 25, 64, 238, 4, 0, 0, 255, 127, 25, 64, 0, 0, 0, 0, 84, 165, 25, 64, 238, 4, 0, 0, 28, 199, 25, 64, 146, 21, 0, 0, 105, 227, 25, 64, 105, 46, 0, 0, 16, 251, 25, 64, 170, 90, 0, 0, 255, 255, 25, 64, 255, 127, 0, 0, 16, 251, 25, 64, 84, 165, 0, 0, 105, 227, 25, 64, 149, 209, 0, 0, 28, 199, 25, 64, 108, 234, 0, 0, 84, 165, 25, 64, 16, 251, 0, 0, 255, 127, 0, 0, 255, 127, 0, 0)
+}]
+blend_shape_mode = 0
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_aelfw"]
+resource_name = "arrow_Cylinder"
+_surfaces = [{
+"aabb": AABB(-0.081896, -1.10042, -0.081896, 0.163792, 0.800429, 0.163792),
+"attribute_data": PackedByteArray(0, 0, 255, 127, 94, 202, 46, 132, 254, 248, 255, 127, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 0, 0, 255, 255, 0, 0, 254, 224, 255, 127, 218, 233, 6, 148, 255, 238, 0, 0, 255, 238, 0, 0, 71, 219, 0, 0, 71, 219, 0, 0, 183, 204, 255, 127, 49, 250, 54, 173, 255, 191, 255, 127, 111, 253, 255, 191, 255, 198, 0, 0, 255, 198, 0, 0, 183, 180, 255, 127, 210, 250, 181, 208, 71, 179, 0, 0, 71, 179, 0, 0, 183, 164, 255, 127, 242, 239, 243, 229, 255, 144, 255, 127, 155, 216, 126, 247, 255, 158, 0, 0, 255, 158, 0, 0, 255, 127, 255, 127, 255, 191, 111, 253, 255, 134, 0, 0, 255, 134, 0, 0, 12, 113, 255, 127, 65, 170, 150, 248, 255, 110, 0, 0, 255, 110, 0, 0, 183, 92, 255, 127, 107, 145, 159, 231, 71, 91, 0, 0, 71, 91, 0, 0, 183, 76, 255, 127, 205, 133, 200, 210, 71, 75, 0, 0, 71, 75, 0, 0, 255, 56, 255, 127, 46, 132, 160, 181, 243, 54, 0, 0, 243, 54, 0, 0, 183, 36, 255, 127, 11, 144, 11, 154, 71, 35, 0, 0, 71, 35, 0, 0, 255, 16, 255, 127, 99, 167, 127, 136, 243, 14, 0, 0, 243, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 0, 0, 255, 255, 0, 0, 255, 243, 0, 0, 255, 243, 0, 0, 255, 231, 0, 0, 255, 231, 0, 0, 255, 219, 0, 0, 255, 219, 0, 0, 255, 203, 0, 0, 255, 203, 0, 0, 255, 191, 0, 0, 255, 191, 0, 0, 255, 179, 0, 0, 255, 179, 0, 0, 255, 163, 0, 0, 255, 163, 0, 0, 255, 151, 0, 0, 255, 151, 0, 0, 255, 139, 0, 0, 255, 139, 0, 0, 255, 127, 0, 0, 255, 127, 0, 0, 255, 115, 0, 0, 255, 115, 0, 0, 255, 103, 0, 0, 255, 103, 0, 0, 255, 91, 0, 0, 255, 91, 0, 0, 255, 75, 0, 0, 255, 75, 0, 0, 255, 63, 0, 0, 255, 63, 0, 0, 255, 51, 0, 0, 255, 51, 0, 0, 255, 35, 0, 0, 255, 35, 0, 0, 255, 23, 0, 0, 255, 23, 0, 0, 255, 11, 0, 0, 255, 11, 0, 0, 0, 0, 0, 0, 255, 15, 0, 0, 255, 23, 0, 0, 255, 39, 0, 0, 255, 55, 0, 0, 255, 63, 0, 0, 255, 79, 0, 0, 255, 95, 0, 0, 255, 103, 0, 0, 255, 119, 0, 0, 255, 127, 0, 0, 255, 143, 0, 0, 255, 151, 0, 0, 255, 167, 0, 0, 255, 183, 0, 0, 255, 191, 0, 0, 255, 207, 0, 0, 255, 223, 0, 0, 255, 231, 0, 0, 255, 247, 0, 0, 254, 248, 255, 127, 255, 191, 255, 127, 0, 0, 0, 0, 255, 255, 0, 0, 255, 243, 0, 0, 255, 231, 0, 0, 255, 219, 0, 0, 255, 203, 0, 0, 255, 191, 0, 0, 255, 179, 0, 0, 255, 163, 0, 0, 255, 151, 0, 0, 255, 139, 0, 0, 255, 127, 0, 0, 255, 115, 0, 0, 255, 103, 0, 0, 255, 91, 0, 0, 255, 75, 0, 0, 255, 63, 0, 0, 255, 51, 0, 0, 255, 35, 0, 0, 255, 23, 0, 0, 255, 11, 0, 0, 0, 0, 0, 0, 255, 15, 0, 0, 255, 23, 0, 0, 255, 39, 0, 0, 255, 55, 0, 0, 255, 63, 0, 0, 255, 79, 0, 0, 255, 95, 0, 0, 255, 103, 0, 0, 255, 119, 0, 0, 255, 127, 0, 0, 255, 143, 0, 0, 255, 151, 0, 0, 255, 167, 0, 0, 255, 183, 0, 0, 255, 191, 0, 0, 255, 207, 0, 0, 255, 223, 0, 0, 255, 231, 0, 0, 255, 247, 0, 0),
+"format": 34896613399,
+"index_count": 276,
+"index_data": PackedByteArray(9, 0, 7, 0, 2, 0, 13, 0, 11, 0, 17, 0, 13, 0, 7, 0, 11, 0, 17, 0, 15, 0, 13, 0, 27, 0, 25, 0, 23, 0, 31, 0, 29, 0, 25, 0, 65, 0, 63, 0, 116, 0, 32, 0, 78, 0, 79, 0, 10, 0, 62, 0, 64, 0, 18, 0, 68, 0, 70, 0, 28, 0, 74, 0, 76, 0, 35, 0, 81, 0, 83, 0, 58, 0, 98, 0, 99, 0, 84, 0, 82, 0, 107, 0, 67, 0, 65, 0, 115, 0, 86, 0, 84, 0, 106, 0, 69, 0, 67, 0, 114, 0, 88, 0, 86, 0, 105, 0, 71, 0, 69, 0, 113, 0, 90, 0, 88, 0, 104, 0, 73, 0, 71, 0, 112, 0, 92, 0, 90, 0, 103, 0, 75, 0, 73, 0, 111, 0, 94, 0, 92, 0, 102, 0, 77, 0, 75, 0, 110, 0, 61, 0, 60, 0, 118, 0, 96, 0, 94, 0, 101, 0, 80, 0, 77, 0, 109, 0, 63, 0, 61, 0, 117, 0, 98, 0, 96, 0, 100, 0, 82, 0, 80, 0, 108, 0, 5, 0, 9, 0, 2, 0, 9, 0, 11, 0, 7, 0, 19, 0, 17, 0, 21, 0, 19, 0, 15, 0, 17, 0, 23, 0, 21, 0, 27, 0, 23, 0, 19, 0, 21, 0, 33, 0, 31, 0, 36, 0, 33, 0, 29, 0, 31, 0, 27, 0, 31, 0, 25, 0, 37, 0, 36, 0, 40, 0, 37, 0, 33, 0, 36, 0, 41, 0, 40, 0, 44, 0, 41, 0, 37, 0, 40, 0, 45, 0, 44, 0, 48, 0, 45, 0, 41, 0, 44, 0, 49, 0, 48, 0, 52, 0, 49, 0, 45, 0, 48, 0, 53, 0, 52, 0, 56, 0, 53, 0, 49, 0, 52, 0, 74, 0, 22, 0, 72, 0, 74, 0, 28, 0, 22, 0, 0, 0, 56, 0, 3, 0, 0, 0, 53, 0, 56, 0, 30, 0, 24, 0, 26, 0, 24, 0, 16, 0, 20, 0, 16, 0, 8, 0, 14, 0, 8, 0, 54, 0, 1, 0, 54, 0, 46, 0, 50, 0, 46, 0, 38, 0, 42, 0, 38, 0, 30, 0, 34, 0, 30, 0, 16, 0, 24, 0, 16, 0, 54, 0, 8, 0, 54, 0, 38, 0, 46, 0, 38, 0, 16, 0, 30, 0, 16, 0, 38, 0, 54, 0, 85, 0, 35, 0, 83, 0, 85, 0, 39, 0, 35, 0, 93, 0, 55, 0, 51, 0, 93, 0, 95, 0, 55, 0, 81, 0, 32, 0, 79, 0, 81, 0, 35, 0, 32, 0, 47, 0, 89, 0, 91, 0, 55, 0, 95, 0, 97, 0, 66, 0, 10, 0, 64, 0, 66, 0, 12, 0, 10, 0, 87, 0, 39, 0, 85, 0, 87, 0, 43, 0, 39, 0, 72, 0, 18, 0, 70, 0, 72, 0, 22, 0, 18, 0, 91, 0, 51, 0, 47, 0, 91, 0, 93, 0, 51, 0, 78, 0, 28, 0, 76, 0, 78, 0, 32, 0, 28, 0, 62, 0, 6, 0, 59, 0, 62, 0, 10, 0, 6, 0, 97, 0, 4, 0, 55, 0, 97, 0, 57, 0, 4, 0, 68, 0, 12, 0, 66, 0, 68, 0, 18, 0, 12, 0, 87, 0, 47, 0, 43, 0, 87, 0, 89, 0, 47, 0),
+"lods": [0.0425878, PackedByteArray(11, 0, 120, 0, 119, 0, 5, 0, 11, 0, 119, 0, 15, 0, 11, 0, 44, 0, 53, 0, 15, 0, 44, 0, 0, 0, 53, 0, 44, 0, 0, 0, 44, 0, 3, 0, 125, 0, 124, 0, 159, 0, 124, 0, 123, 0, 160, 0, 123, 0, 122, 0, 161, 0, 126, 0, 125, 0, 158, 0, 127, 0, 126, 0, 157, 0, 128, 0, 127, 0, 156, 0, 129, 0, 128, 0, 155, 0, 130, 0, 129, 0, 154, 0, 131, 0, 130, 0, 153, 0, 132, 0, 131, 0, 152, 0, 133, 0, 132, 0, 151, 0, 134, 0, 133, 0, 150, 0, 135, 0, 134, 0, 149, 0, 136, 0, 135, 0, 148, 0, 137, 0, 136, 0, 147, 0, 138, 0, 137, 0, 146, 0, 139, 0, 138, 0, 145, 0, 140, 0, 139, 0, 144, 0, 141, 0, 140, 0, 143, 0, 121, 0, 141, 0, 142, 0, 43, 0, 78, 0, 79, 0, 78, 0, 43, 0, 76, 0, 81, 0, 43, 0, 79, 0, 43, 0, 74, 0, 76, 0, 43, 0, 81, 0, 83, 0, 74, 0, 43, 0, 72, 0, 85, 0, 43, 0, 83, 0, 72, 0, 43, 0, 70, 0, 87, 0, 43, 0, 85, 0, 87, 0, 89, 0, 43, 0, 43, 0, 89, 0, 91, 0, 91, 0, 93, 0, 43, 0, 93, 0, 95, 0, 43, 0, 43, 0, 68, 0, 70, 0, 43, 0, 95, 0, 97, 0, 97, 0, 4, 0, 43, 0, 97, 0, 57, 0, 4, 0, 68, 0, 43, 0, 12, 0, 68, 0, 12, 0, 66, 0, 66, 0, 12, 0, 64, 0, 12, 0, 62, 0, 64, 0, 62, 0, 12, 0, 6, 0, 62, 0, 6, 0, 59, 0, 16, 0, 54, 0, 1, 0)],
+"material": SubResource("StandardMaterial3D_tixkw"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 162,
+"vertex_data": PackedByteArray(84, 119, 254, 255, 13, 178, 62, 121, 84, 119, 254, 255, 13, 178, 255, 255, 84, 119, 254, 255, 13, 178, 62, 121, 255, 127, 25, 64, 48, 178, 23, 127, 255, 127, 25, 64, 48, 178, 255, 63, 255, 127, 25, 64, 48, 178, 23, 127, 255, 127, 25, 64, 48, 178, 255, 63, 251, 92, 254, 255, 205, 164, 126, 96, 251, 92, 254, 255, 205, 164, 231, 255, 101, 107, 25, 64, 111, 174, 146, 110, 101, 107, 25, 64, 111, 174, 255, 63, 121, 88, 25, 64, 73, 159, 52, 92, 121, 88, 25, 64, 73, 159, 255, 191, 6, 80, 254, 255, 121, 143, 238, 76, 6, 80, 254, 255, 121, 143, 87, 254, 206, 77, 254, 255, 255, 127, 215, 64, 206, 77, 254, 255, 255, 127, 198, 255, 241, 77, 25, 64, 170, 136, 247, 71, 241, 77, 25, 64, 170, 136, 255, 191, 130, 79, 254, 255, 54, 114, 131, 51, 130, 79, 254, 255, 54, 114, 242, 255, 6, 80, 25, 64, 133, 112, 126, 51, 6, 80, 25, 64, 133, 112, 255, 191, 121, 88, 254, 255, 181, 96, 81, 35, 121, 88, 254, 255, 181, 96, 105, 255, 101, 107, 254, 255, 143, 81, 108, 17, 101, 107, 254, 255, 143, 81, 56, 253, 251, 92, 25, 64, 49, 91, 9, 31, 251, 92, 25, 64, 49, 91, 255, 191, 255, 127, 254, 255, 206, 77, 231, 0, 255, 127, 254, 255, 206, 77, 226, 255, 84, 119, 25, 64, 241, 77, 192, 6, 84, 119, 25, 64, 241, 77, 255, 191, 67, 146, 254, 255, 152, 80, 5, 16, 67, 146, 254, 255, 152, 80, 187, 252, 153, 148, 25, 64, 143, 81, 255, 191, 153, 148, 25, 64, 143, 81, 14, 16, 101, 166, 254, 255, 87, 95, 76, 35, 101, 166, 254, 255, 87, 95, 169, 255, 133, 167, 25, 64, 181, 96, 255, 63, 133, 167, 25, 64, 181, 96, 81, 35, 248, 175, 254, 255, 133, 112, 174, 52, 248, 175, 254, 255, 133, 112, 183, 255, 124, 176, 25, 64, 54, 114, 255, 191, 124, 176, 25, 64, 54, 114, 179, 52, 13, 178, 254, 255, 170, 136, 251, 71, 13, 178, 254, 255, 170, 136, 137, 255, 143, 177, 25, 64, 37, 139, 255, 63, 143, 177, 25, 64, 37, 139, 4, 72, 133, 167, 254, 255, 73, 159, 252, 91, 133, 167, 254, 255, 73, 159, 56, 254, 101, 166, 25, 64, 167, 160, 255, 191, 101, 166, 25, 64, 167, 160, 2, 92, 153, 148, 254, 255, 111, 174, 241, 111, 153, 148, 254, 255, 111, 174, 211, 255, 67, 146, 25, 64, 102, 175, 255, 63, 67, 146, 25, 64, 102, 175, 250, 111, 255, 127, 25, 64, 255, 255, 255, 63, 255, 127, 25, 64, 255, 255, 49, 112, 255, 127, 25, 64, 255, 255, 255, 63, 255, 127, 25, 64, 255, 255, 49, 112, 170, 90, 25, 64, 16, 251, 210, 109, 170, 90, 25, 64, 16, 251, 0, 64, 226, 56, 25, 64, 108, 234, 39, 104, 226, 56, 25, 64, 108, 234, 255, 63, 149, 28, 25, 64, 149, 209, 225, 95, 149, 28, 25, 64, 149, 209, 255, 191, 238, 4, 25, 64, 84, 165, 141, 82, 238, 4, 25, 64, 84, 165, 0, 64, 0, 0, 25, 64, 255, 127, 255, 63, 0, 0, 25, 64, 255, 127, 255, 63, 238, 4, 25, 64, 170, 90, 140, 210, 238, 4, 25, 64, 170, 90, 255, 191, 149, 28, 25, 64, 105, 46, 224, 223, 149, 28, 25, 64, 105, 46, 255, 63, 226, 56, 25, 64, 146, 21, 38, 232, 226, 56, 25, 64, 146, 21, 255, 63, 170, 90, 25, 64, 238, 4, 209, 237, 170, 90, 25, 64, 238, 4, 255, 191, 255, 127, 25, 64, 0, 0, 255, 191, 255, 127, 25, 64, 0, 0, 48, 240, 84, 165, 25, 64, 238, 4, 255, 191, 84, 165, 25, 64, 238, 4, 209, 237, 28, 199, 25, 64, 146, 21, 255, 191, 28, 199, 25, 64, 146, 21, 38, 232, 105, 227, 25, 64, 105, 46, 255, 63, 105, 227, 25, 64, 105, 46, 224, 223, 16, 251, 25, 64, 170, 90, 255, 191, 16, 251, 25, 64, 170, 90, 140, 210, 255, 255, 25, 64, 255, 127, 255, 63, 255, 255, 25, 64, 255, 127, 255, 191, 16, 251, 25, 64, 84, 165, 0, 64, 16, 251, 25, 64, 84, 165, 140, 82, 105, 227, 25, 64, 149, 209, 255, 191, 105, 227, 25, 64, 149, 209, 225, 95, 28, 199, 25, 64, 108, 234, 255, 63, 28, 199, 25, 64, 108, 234, 39, 104, 84, 165, 25, 64, 16, 251, 0, 64, 84, 165, 25, 64, 16, 251, 210, 109, 255, 127, 0, 0, 255, 127, 255, 63, 255, 127, 0, 0, 255, 127, 255, 63, 255, 127, 0, 0, 255, 127, 255, 63, 255, 127, 0, 0, 255, 127, 255, 63, 255, 127, 0, 0, 255, 127, 255, 63, 255, 127, 0, 0, 255, 127, 255, 63, 255, 127, 0, 0, 255, 127, 255, 63, 255, 127, 0, 0, 255, 127, 255, 63, 255, 127, 0, 0, 255, 127, 255, 63, 255, 127, 0, 0, 255, 127, 255, 63, 255, 127, 0, 0, 255, 127, 255, 63, 255, 127, 0, 0, 255, 127, 255, 63, 255, 127, 0, 0, 255, 127, 255, 63, 255, 127, 0, 0, 255, 127, 255, 63, 255, 127, 0, 0, 255, 127, 255, 63, 255, 127, 0, 0, 255, 127, 255, 63, 255, 127, 0, 0, 255, 127, 255, 63, 255, 127, 0, 0, 255, 127, 255, 63, 255, 127, 0, 0, 255, 127, 255, 63, 255, 127, 0, 0, 255, 127, 255, 63, 84, 119, 254, 255, 13, 178, 121, 111, 206, 77, 254, 255, 255, 127, 32, 74, 255, 127, 25, 64, 255, 255, 119, 103, 255, 127, 25, 64, 255, 255, 147, 105, 170, 90, 25, 64, 16, 251, 114, 103, 226, 56, 25, 64, 108, 234, 112, 100, 149, 28, 25, 64, 149, 209, 207, 88, 238, 4, 25, 64, 84, 165, 49, 75, 0, 0, 25, 64, 255, 127, 147, 62, 238, 4, 25, 64, 170, 90, 164, 207, 149, 28, 25, 64, 105, 46, 169, 216, 226, 56, 25, 64, 146, 21, 116, 220, 170, 90, 25, 64, 238, 4, 33, 230, 255, 127, 25, 64, 0, 0, 31, 226, 84, 165, 25, 64, 238, 4, 227, 226, 28, 199, 25, 64, 146, 21, 248, 221, 105, 227, 25, 64, 105, 46, 253, 216, 16, 251, 25, 64, 170, 90, 197, 207, 255, 255, 25, 64, 255, 127, 75, 192, 16, 251, 25, 64, 84, 165, 60, 79, 105, 227, 25, 64, 149, 209, 233, 87, 28, 199, 25, 64, 108, 234, 240, 95, 84, 165, 25, 64, 16, 251, 17, 97, 255, 127, 0, 0, 255, 127, 140, 95, 255, 127, 0, 0, 255, 127, 64, 89, 255, 127, 0, 0, 255, 127, 61, 88, 255, 127, 0, 0, 255, 127, 96, 79, 255, 127, 0, 0, 255, 127, 86, 70, 255, 127, 0, 0, 255, 127, 213, 58, 255, 127, 0, 0, 255, 127, 85, 47, 255, 127, 0, 0, 255, 127, 81, 38, 255, 127, 0, 0, 255, 127, 100, 42, 255, 127, 0, 0, 255, 127, 202, 36, 255, 127, 0, 0, 255, 127, 131, 40, 255, 127, 0, 0, 255, 127, 158, 38, 255, 127, 0, 0, 255, 127, 244, 42, 255, 127, 0, 0, 255, 127, 151, 49, 255, 127, 0, 0, 255, 127, 188, 58, 255, 127, 0, 0, 255, 127, 191, 66, 255, 127, 0, 0, 255, 127, 21, 74, 255, 127, 0, 0, 255, 127, 169, 85, 255, 127, 0, 0, 255, 127, 163, 92, 255, 127, 0, 0, 255, 127, 91, 95, 154, 129, 170, 254, 255, 127, 255, 191, 66, 129, 59, 254, 166, 126, 94, 254, 254, 255, 255, 127, 96, 126, 167, 254, 254, 255, 255, 127, 46, 128, 190, 255, 12, 192, 25, 0, 112, 127, 137, 255, 254, 255, 0, 128, 213, 127, 227, 255, 254, 255, 0, 128, 13, 128, 232, 255, 231, 192, 208, 1, 3, 128, 247, 255, 30, 192, 62, 0, 242, 127, 247, 255, 254, 255, 255, 127, 238, 127, 247, 255, 6, 192, 13, 0, 238, 127, 248, 255, 254, 255, 255, 127, 4, 128, 241, 255, 82, 192, 165, 0, 5, 128, 223, 255, 129, 193, 3, 3, 223, 127, 246, 255, 254, 255, 255, 127, 255, 127, 251, 255, 30, 128, 239, 191, 225, 127, 252, 255, 254, 255, 255, 127, 253, 127, 9, 0, 135, 131, 59, 190, 254, 255, 255, 127, 253, 127, 9, 0, 1, 128, 0, 0, 94, 128, 207, 191, 254, 255, 254, 127, 1, 128, 0, 0, 254, 127, 1, 0, 78, 128, 215, 191, 254, 255, 255, 127, 254, 127, 1, 0, 255, 127, 0, 0, 129, 128, 190, 191, 254, 255, 255, 127, 255, 127, 0, 0, 255, 127, 0, 0, 240, 129, 6, 191, 254, 255, 254, 127, 255, 127, 0, 0, 45, 128, 38, 0, 48, 128, 230, 191, 254, 255, 254, 127, 45, 128, 38, 0, 254, 255, 255, 127, 0, 0, 255, 127, 254, 255, 255, 127, 0, 0, 255, 127, 247, 32, 247, 160, 254, 255, 255, 127, 92, 49, 91, 177, 254, 255, 255, 127, 5, 56, 5, 184, 254, 255, 0, 128, 167, 54, 167, 182, 254, 255, 255, 127, 109, 51, 109, 179, 254, 255, 255, 127, 167, 54, 167, 182, 254, 255, 255, 127, 5, 56, 5, 184, 254, 255, 0, 128, 92, 49, 91, 177, 254, 255, 255, 127, 247, 32, 247, 160, 254, 255, 255, 127, 254, 255, 255, 127, 0, 0, 255, 127, 254, 255, 255, 127, 247, 32, 7, 95, 254, 255, 255, 127, 92, 49, 163, 78, 254, 255, 254, 127, 5, 56, 249, 71, 254, 255, 255, 127, 167, 54, 87, 73, 254, 255, 255, 127, 109, 51, 145, 76, 254, 255, 255, 127, 167, 54, 87, 73, 254, 255, 254, 127, 5, 56, 249, 71, 254, 255, 255, 127, 92, 49, 163, 78, 254, 255, 255, 127, 247, 32, 7, 95, 0, 0, 255, 127, 0, 0, 255, 127, 0, 0, 255, 127, 0, 0, 255, 127, 0, 0, 255, 127, 0, 0, 255, 127, 0, 0, 255, 127, 0, 0, 255, 127, 0, 0, 255, 127, 0, 0, 255, 127, 0, 0, 255, 127, 0, 0, 255, 127, 0, 0, 255, 127, 0, 0, 255, 127, 0, 0, 255, 127, 0, 0, 255, 127, 0, 0, 255, 127, 0, 0, 255, 127, 0, 0, 255, 127, 0, 0, 255, 127, 13, 128, 190, 255, 3, 128, 246, 255, 18, 6, 237, 121, 194, 13, 194, 141, 122, 24, 121, 152, 236, 40, 236, 168, 6, 42, 5, 170, 161, 38, 161, 166, 44, 39, 43, 167, 41, 44, 40, 172, 190, 39, 190, 167, 102, 28, 102, 156, 54, 22, 53, 150, 36, 0, 35, 128, 119, 20, 135, 107, 44, 32, 210, 95, 101, 42, 154, 85, 167, 45, 88, 82, 46, 43, 208, 84, 171, 45, 84, 82, 100, 40, 154, 87, 177, 32, 78, 95, 164, 18, 91, 109, 36, 9, 219, 118, 137, 19, 117, 108, 26, 30, 229, 97, 8, 34, 246, 93, 194, 38, 60, 89, 166, 37, 88, 90, 201, 36, 53, 91, 80, 33, 174, 94, 44, 18, 211, 109, 250, 7, 5, 120, 11, 5, 10, 133, 178, 17, 178, 145, 38, 26, 38, 154, 47, 31, 47, 159, 19, 33, 18, 161, 191, 31, 190, 159, 123, 25, 122, 153, 101, 29, 101, 157, 89, 22, 88, 150, 208, 9, 207, 137)
+}]
+blend_shape_mode = 0
+shadow_mesh = SubResource("ArrayMesh_n2a4a")
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_7dvy4"]
+radius = 0.287876
+height = 1.38921
+
+[node name="ShipEditor" type="Node3D"]
+script = SubResource("GDScript_krd1n")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_a12j6")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, 0, 0, 0)
+shadow_enabled = true
+
+[node name="camera" type="Node3D" parent="."]
+
+[node name="Camera3D" type="Camera3D" parent="camera"]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -8, 0, 0)
+
+[node name="save panel" type="HBoxContainer" parent="."]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -166.0
+offset_top = 3.0
+offset_right = 167.0
+offset_bottom = 46.0
+grow_horizontal = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="save" type="Button" parent="save panel"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "Save"
+
+[node name="new" type="Button" parent="save panel"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "New
+"
+
+[node name="load" type="Button" parent="save panel"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "Load"
+
+[node name="exit" type="Button" parent="save panel"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "Exit
+"
+
+[node name="part list" type="VBoxContainer" parent="."]
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 3.0
+offset_top = -21.0
+offset_right = 110.0
+offset_bottom = 22.0
+grow_vertical = 2
+theme_override_constants/separation = 5
+script = SubResource("GDScript_x7t0q")
+
+[node name="Label" type="Label" parent="part list"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "Add Part:"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="part list"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="part list/HBoxContainer"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "Block"
+
+[node name="Label2" type="Label" parent="part list/HBoxContainer"]
+layout_mode = 2
+text = "x10"
+
+[node name="part editor" type="VBoxContainer" parent="."]
+visible = false
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -151.0
+offset_top = -84.0
+offset_right = -3.0
+offset_bottom = 84.0
+grow_horizontal = 0
+grow_vertical = 2
+theme_override_constants/separation = 5
+script = SubResource("GDScript_xgemo")
+
+[node name="Name" type="Label" parent="part editor"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "Part Name"
+horizontal_alignment = 1
+
+[node name="Stats" type="Label" parent="part editor"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "Mass, Hp"
+horizontal_alignment = 1
+
+[node name="Attributes" type="Label" parent="part editor"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "Other"
+horizontal_alignment = 1
+
+[node name="Spacer" type="Label" parent="part editor"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+horizontal_alignment = 1
+
+[node name="Button" type="Button" parent="part editor"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "Move"
+
+[node name="Spacer3" type="Label" parent="part editor"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+horizontal_alignment = 1
+
+[node name="Label" type="Label" parent="part editor"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "Part Colors"
+horizontal_alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="part editor"]
+layout_mode = 2
+theme_override_constants/separation = 5
+alignment = 1
+
+[node name="ColorRect" type="ColorRect" parent="part editor/HBoxContainer"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+
+[node name="Spacer2" type="Label" parent="part editor"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+horizontal_alignment = 1
+
+[node name="Label2" type="Label" parent="part editor"]
+visible = false
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "Pick Color:"
+horizontal_alignment = 1
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="part editor"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 5
+alignment = 1
+
+[node name="ColorRect" type="ColorRect" parent="part editor/HBoxContainer2"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+
+[node name="Button" type="Button" parent="part editor/HBoxContainer2"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "+"
+
+[node name="HBoxContainer3" type="HBoxContainer" parent="part editor"]
+layout_mode = 2
+
+[node name="ship stats" type="VBoxContainer" parent="."]
+visible = false
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -151.0
+offset_top = -84.0
+offset_right = -3.0
+offset_bottom = 84.0
+grow_horizontal = 0
+grow_vertical = 2
+theme_override_constants/separation = 5
+
+[node name="Name" type="Label" parent="ship stats"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "Part Name"
+horizontal_alignment = 1
+
+[node name="Stats" type="Label" parent="ship stats"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "Mass, Hp"
+horizontal_alignment = 1
+
+[node name="Attributes" type="Label" parent="ship stats"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "Other"
+horizontal_alignment = 1
+
+[node name="color creator" type="VBoxContainer" parent="."]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_0ltdx")
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="color creator"]
+layout_mode = 2
+
+[node name="SubViewport" type="SubViewport" parent="color creator/SubViewportContainer"]
+own_world_3d = true
+transparent_bg = true
+handle_input_locally = false
+render_target_update_mode = 0
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="color creator/SubViewportContainer/SubViewport"]
+environment = SubResource("Environment_dqbsr")
+
+[node name="Camera3D" type="Camera3D" parent="color creator/SubViewportContainer/SubViewport"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.85)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="color creator/SubViewportContainer/SubViewport"]
+mesh = SubResource("SphereMesh_1tw3i")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="color creator/SubViewportContainer/SubViewport"]
+transform = Transform3D(0.819152, 0.40558, -0.40558, 0, 0.707107, 0.707107, 0.573576, -0.579228, 0.579228, 0, 0, 0)
+
+[node name="red" type="HBoxContainer" parent="color creator"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="color creator/red"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "Red
+"
+horizontal_alignment = 1
+
+[node name="HSlider" type="HSlider" parent="color creator/red"]
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+size_flags_horizontal = 10
+size_flags_vertical = 1
+max_value = 1.0
+step = 0.1
+
+[node name="green" type="HBoxContainer" parent="color creator"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="color creator/green"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "Green"
+horizontal_alignment = 1
+
+[node name="HSlider" type="HSlider" parent="color creator/green"]
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+size_flags_horizontal = 10
+size_flags_vertical = 1
+max_value = 1.0
+step = 0.1
+
+[node name="blue" type="HBoxContainer" parent="color creator"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="color creator/blue"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "Blue
+"
+horizontal_alignment = 1
+
+[node name="HSlider" type="HSlider" parent="color creator/blue"]
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+size_flags_horizontal = 10
+size_flags_vertical = 1
+max_value = 1.0
+step = 0.1
+
+[node name="roughness" type="HBoxContainer" parent="color creator"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="color creator/roughness"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "Roughness
+"
+horizontal_alignment = 1
+
+[node name="HSlider" type="HSlider" parent="color creator/roughness"]
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+size_flags_horizontal = 10
+size_flags_vertical = 1
+max_value = 1.0
+step = 0.1
+
+[node name="metallic" type="HBoxContainer" parent="color creator"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="color creator/metallic"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "Metallic"
+horizontal_alignment = 1
+
+[node name="HSlider" type="HSlider" parent="color creator/metallic"]
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+size_flags_horizontal = 10
+size_flags_vertical = 1
+max_value = 1.0
+step = 0.1
+
+[node name="Button" type="Button" parent="color creator"]
+custom_minimum_size = Vector2(100, 20)
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("1_l3kra")
+text = "Accept"
+
+[node name="load file" type="VBoxContainer" parent="."]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_13jre")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="load file"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="load file/HBoxContainer"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "Load Ship File"
+
+[node name="Button" type="Button" parent="load file/HBoxContainer"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "Cancel"
+
+[node name="save file" type="HBoxContainer" parent="."]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -227.5
+offset_top = -21.5
+offset_right = 227.5
+offset_bottom = 21.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 5
+script = SubResource("GDScript_3b3c2")
+
+[node name="LineEdit" type="LineEdit" parent="save file"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme = ExtResource("1_l3kra")
+placeholder_text = "Enter Ship Name"
+
+[node name="cancel" type="Button" parent="save file"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "Cancel
+"
+
+[node name="save" type="Button" parent="save file"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "Save"
+
+[node name="overwrite" type="HBoxContainer" parent="."]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -116.5
+offset_top = -21.5
+offset_right = 116.5
+offset_bottom = 21.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 5
+
+[node name="Label" type="Label" parent="overwrite"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "Overwrite?"
+
+[node name="Button" type="Button" parent="overwrite"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "Yes"
+
+[node name="Button2" type="Button" parent="overwrite"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "No
+"
+
+[node name="unsaved" type="HBoxContainer" parent="."]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -116.5
+offset_top = -21.5
+offset_right = 116.5
+offset_bottom = 21.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 5
+
+[node name="Label" type="Label" parent="unsaved"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "Discard Unsaved Changes?"
+
+[node name="Button" type="Button" parent="unsaved"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "Yes"
+
+[node name="Button2" type="Button" parent="unsaved"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "No
+"
+
+[node name="saved" type="Label" parent="."]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -11.5
+offset_right = 20.0
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_l3kra")
+text = "Ship Saved"
+
+[node name="ship camera" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="ship camera"]
+transform = Transform3D(-1.3, 1.1365e-07, 0, 0, 0, 1.3, 1.1365e-07, 1.3, 0, 6.55671e-08, 0, 0.75)
+mesh = SubResource("ArrayMesh_aelfw")
+skeleton = NodePath("")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ship camera"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, -0.120577)
+shape = SubResource("CapsuleShape3D_7dvy4")
+
+[node name="rotate prompt" type="HBoxContainer" parent="."]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -137.0
+offset_top = -102.0
+offset_right = 137.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="Label" type="Label" parent="rotate prompt"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "Rotate"
+horizontal_alignment = 1
+
+[node name="TextureRect" type="TextureRect" parent="rotate prompt"]
+custom_minimum_size = Vector2(116, 75)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("2_q3ipb")
+expand_mode = 1
+
+[node name="place prompt" type="HBoxContainer" parent="."]
+visible = false
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -137.0
+offset_top = -184.0
+offset_right = 137.0
+offset_bottom = -82.0
+grow_horizontal = 2
+grow_vertical = 0
+alignment = 1
+
+[node name="Label" type="Label" parent="place prompt"]
+layout_mode = 2
+theme = ExtResource("1_l3kra")
+text = "Place"
+horizontal_alignment = 1
+
+[node name="TextureRect" type="TextureRect" parent="place prompt"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("3_hml7m")
+expand_mode = 1
+
+[connection signal="button_down" from="save panel/save" to="save file" method="show"]
+[connection signal="button_down" from="save panel/new" to="unsaved" method="show"]
+[connection signal="button_down" from="save panel/load" to="load file" method="show"]
+[connection signal="button_down" from="save panel/exit" to="." method="_on_exit_button_down"]
+[connection signal="button_down" from="part editor/Button" to="." method="move_part"]
+[connection signal="button_down" from="part editor/HBoxContainer2/Button" to="part editor" method="new_color"]
+[connection signal="button_down" from="load file/HBoxContainer/Button" to="load file" method="hide"]
+[connection signal="button_down" from="save file/cancel" to="save file" method="_on_cancel_button_down"]
+[connection signal="button_down" from="save file/save" to="save file" method="_on_save_button_down"]
+[connection signal="button_down" from="overwrite/Button" to="save file" method="save"]
+[connection signal="button_down" from="overwrite/Button2" to="overwrite" method="hide"]
+[connection signal="button_down" from="unsaved/Button" to="." method="new_ship"]
+[connection signal="button_down" from="unsaved/Button2" to="unsaved" method="hide"]

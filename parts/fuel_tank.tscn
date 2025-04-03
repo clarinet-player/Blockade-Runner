@@ -72,7 +72,7 @@ shadow_mesh = SubResource("ArrayMesh_6ox2r")
 script = ExtResource("1_noex3")
 type = "Fuel Tank"
 mass = 3.0
-health = 0.5
+health = 1.0
 attributes = {
 "Fuel": 20.0
 }

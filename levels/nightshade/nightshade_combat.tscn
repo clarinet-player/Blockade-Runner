@@ -1,0 +1,42 @@
+[gd_scene load_steps=6 format=3 uid="uid://dw15724xwkb7h"]
+
+[ext_resource type="PackedScene" uid="uid://cwy0si0g7awhp" path="res://classes/combat_scene_base.tscn" id="1_ixr5q"]
+[ext_resource type="PackedScene" uid="uid://b3x1gq71qfqfj" path="res://classes/object_spawner.tscn" id="2_d7k0l"]
+[ext_resource type="PackedScene" uid="uid://dwqr8jq0alrsi" path="res://classes/celestial_body_sprite.tscn" id="3_2pahk"]
+[ext_resource type="Texture2D" uid="uid://b0q81ubb4dax" path="res://levels/nightshade/nightshade.png" id="4_gtmmm"]
+[ext_resource type="Texture2D" uid="uid://dgeqse8nwjo1a" path="res://assets/black_hole.png" id="5_pbvuw"]
+
+[node name="CombatSceneBase" instance=ExtResource("1_ixr5q")]
+
+[node name="ObjectSpawner" parent="." index="0" instance=ExtResource("2_d7k0l")]
+filepath = "res://enemies/corporate_light.tscn"
+distance = 250.0
+delay = 14.0
+empty_delay = 5.0
+max_spawns = 6
+
+[node name="ObjectSpawner2" parent="." index="1" instance=ExtResource("2_d7k0l")]
+filepath = "res://enemies/corporate_medium.tscn"
+distance = 320.0
+delay = 40.0
+empty_delay = 35.0
+max_enemies = 3
+max_spawns = 1
+
+[node name="ObjectSpawner3" parent="." index="2" instance=ExtResource("2_d7k0l")]
+filepath = "res://classes/ring_gate.tscn"
+distance = 320.0
+delay = 60.0
+empty_delay = 50.0
+max_enemies = 2
+max_spawns = 1
+
+[node name="CelestialBodySprite" parent="." index="5" instance=ExtResource("3_2pahk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1000)
+texture = ExtResource("4_gtmmm")
+display_position = Vector3(0, 0, -1000)
+
+[node name="CelestialBodySprite3" parent="." index="6" instance=ExtResource("3_2pahk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 500, -500, 500)
+texture = ExtResource("5_pbvuw")
+display_position = Vector3(500, -500, 500)

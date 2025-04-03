@@ -1,0 +1,74 @@
+[gd_scene load_steps=10 format=3 uid="uid://cfwfv2uodwkra"]
+
+[ext_resource type="PackedScene" uid="uid://cwy0si0g7awhp" path="res://classes/combat_scene_base.tscn" id="1_tnavh"]
+[ext_resource type="PackedScene" uid="uid://b3x1gq71qfqfj" path="res://classes/object_spawner.tscn" id="2_jyuvt"]
+[ext_resource type="PackedScene" uid="uid://dwqr8jq0alrsi" path="res://classes/celestial_body_sprite.tscn" id="3_aawah"]
+[ext_resource type="Texture2D" uid="uid://dphnifoe5ukqr" path="res://levels/sarnus/moon3.png" id="4_djwsl"]
+[ext_resource type="Texture2D" uid="uid://dslhykpb7p1nb" path="res://levels/sarnus/sarnus.png" id="6_dbmun"]
+[ext_resource type="Texture2D" uid="uid://bl83e237ija88" path="res://levels/sarnus/moon5.png" id="6_vknvl"]
+[ext_resource type="Texture2D" uid="uid://nfkbdp2prg6s" path="res://levels/sarnus/moon4.png" id="7_o5cho"]
+[ext_resource type="PackedScene" uid="uid://dom60hk30esk3" path="res://enemies/corporate_light.tscn" id="8_ynvq5"]
+[ext_resource type="Texture2D" uid="uid://dgeqse8nwjo1a" path="res://assets/black_hole.png" id="9_0lguj"]
+
+[node name="CombatSceneBase" instance=ExtResource("1_tnavh")]
+planet = "Sarnus"
+token_gen_delay = 0.5
+
+[node name="ObjectSpawner" parent="." index="0" instance=ExtResource("2_jyuvt")]
+filepath = "res://enemies/corporate_light.tscn"
+distance = 250.0
+delay = 12.0
+empty_delay = 5.0
+max_wave_size = 2
+max_spawns = 16
+
+[node name="ObjectSpawner2" parent="." index="1" instance=ExtResource("2_jyuvt")]
+filepath = "res://enemies/corporate_medium.tscn"
+distance = 320.0
+delay = 20.0
+empty_delay = 10.0
+max_spawns = 10
+
+[node name="ObjectSpawner3" parent="." index="2" instance=ExtResource("2_jyuvt")]
+filepath = "res://enemies/corporate_heavy.tscn"
+distance = 250.0
+delay = 50.0
+empty_delay = 30.0
+max_enemies = 3
+max_spawns = 1
+
+[node name="ObjectSpawner4" parent="." index="3" instance=ExtResource("2_jyuvt")]
+filepath = "res://classes/ring_gate.tscn"
+distance = 320.0
+delay = 60.0
+empty_delay = 50.0
+max_enemies = 2
+max_spawns = 1
+
+[node name="Corporate Light" parent="." index="6" instance=ExtResource("8_ynvq5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.1858, 13.2803, -250)
+
+[node name="CelestialBodySprite" parent="." index="7" instance=ExtResource("3_aawah")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1000)
+texture = ExtResource("4_djwsl")
+display_position = Vector3(0, 0, -1000)
+
+[node name="CelestialBodySprite6" parent="." index="8" instance=ExtResource("3_aawah")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -700, -300, -400)
+texture = ExtResource("6_vknvl")
+display_position = Vector3(-700, -300, -400)
+
+[node name="CelestialBodySprite5" parent="." index="9" instance=ExtResource("3_aawah")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -600, 300, 500)
+texture = ExtResource("7_o5cho")
+display_position = Vector3(-600, 300, 500)
+
+[node name="CelestialBodySprite2" parent="." index="10" instance=ExtResource("3_aawah")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 800, -150, -400)
+texture = ExtResource("6_dbmun")
+display_position = Vector3(800, -150, -400)
+
+[node name="CelestialBodySprite3" parent="." index="11" instance=ExtResource("3_aawah")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 500, -500, 500)
+texture = ExtResource("9_0lguj")
+display_position = Vector3(500, -500, 500)

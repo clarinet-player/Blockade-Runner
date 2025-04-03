@@ -27,11 +27,11 @@ func use_secondary():
 			target = enemy
 			target_distance = distance
 	
-	var damage = 1.75
+	var damage = 1.7
 	var direction = -Ship.camera.global_basis.z
 	if target != null and acos(direction.dot(Ship.camera.global_position.direction_to(target.global_position))) < 0.01745:
 		direction = direction.slerp(Ship.camera.global_position.direction_to(target.global_position), 0.25)
-		damage = 2.0
+		damage = 1.9
 	var collision = $Shot.move_and_collide(direction * 1000, true)
 	while collision:
 		if \"damage\" in collision.get_collider().get_parent():
@@ -113,6 +113,7 @@ _surfaces = [{
 blend_shape_mode = 0
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_4c7ib"]
+resource_local_to_scene = true
 resource_name = "hell ship23_Cube_016"
 _surfaces = [{
 "aabb": AABB(-1, -0.4, -4, 2, 0.8, 2.00001),
@@ -198,7 +199,7 @@ initial_velocity_max = 3.0
 gravity = Vector3(0, 0, 0)
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_5jlcg"]
-radius = 1.1
+radius = 1.0
 
 [node name="Railgun" type="StaticBody3D"]
 transform = Transform3D(-1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, 0, 0, 0)

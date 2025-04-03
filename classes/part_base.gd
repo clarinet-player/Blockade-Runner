@@ -18,9 +18,13 @@ func _ready():
 
 
 func load_materials():
+	if !"color_scheme" in get_parent():
+		return
 	var surface_index = 0
 	for color in color_indexes:
-		get_node("Mesh").mesh.set("surface_" + var_to_str(surface_index) + "/material", get_parent().color_scheme[color])
+		for child in get_children():
+			if child is MeshInstance3D:
+				child.mesh.set("surface_" + var_to_str(surface_index) + "/material", get_parent().color_scheme[color])
 		surface_index += 1
 
 

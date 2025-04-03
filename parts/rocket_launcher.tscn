@@ -17,7 +17,7 @@ var targets := []
 
 
 func _process(delta):
-	if GameManager.game_state != GameManager.states.combat or Time.get_ticks_msec() - use_time < cooldown or !readied:
+	if GameManager.game_state != GameManager.states.combat or !readied:
 		$Control.hide()
 		return
 	else:
@@ -155,7 +155,7 @@ script = SubResource("GDScript_ofd6p")
 type = "Rocket Launcher"
 mass = 4.0
 health = 0.5
-color_indexes = [0, 0]
+color_indexes = [0, 1]
 
 [node name="Mesh" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.74228e-08, 0, -7.64275e-15)

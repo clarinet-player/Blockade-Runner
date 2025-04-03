@@ -1,0 +1,19 @@
+{
+	"Block": {"value": 15, "file": "res://parts/block.tscn"},
+	"Ammo": {"value": 60, "file": "res://parts/ammo.tscn"},
+	"Cargo": {"value": 30, "file": "res://parts/cargo.tscn"},
+	"Engine": {"value": 30, "file": "res://parts/engine.tscn"},
+	"Fuel Tank": {"value": 25, "file": "res://parts/fuel_tank.tscn"},
+	"Gun": {"value": 50, "file": "res://parts/gun.tscn"},
+	"Medium Engine": {"value": 100, "file": "res://parts/medium_engine.tscn"},
+	"Medium Fuel Tank": {"value": 75, "file": "res://parts/medium_fuel_tank.tscn"},
+	"Minigun": {"value": 250, "file": "res://parts/minigun.tscn"},
+	"Railgun": {"value": 200, "file": "res://parts/railgun.tscn"},
+	"Rocket Launcher": {"value": 150, "file": "res://parts/rocket_launcher.tscn"},
+	"Slab": {"value": 10, "file": "res://parts/slab.tscn"},
+	"Slab Engine": {"value": 30, "file": "res://parts/slab_engine.tscn"},
+	"Slab Gun": {"value": 50, "file": "res://parts/slab_gun.tscn"},
+	"Wedge": {"value": 10, "file": "res://parts/wedge.tscn"},
+	"Wedge Gun": {"value": 50, "file": "res://parts/wedge_gun.tscn"},
+	"Gun Turret": {"value": 100, "file": "res://parts/gun_turret.tscn"}
+}

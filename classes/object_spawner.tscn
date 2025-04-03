@@ -6,43 +6,36 @@ script/source = "extends Node
 
 
 @export_file var filepath
-@export var travel_per_spawn := 100.0
-@export var spawn_distance := 100.0
+@export var distance := 100.0
+@export var delay := 10.0
+@export var empty_delay := 8.0
+@export var max_enemies := 4
 @export var max_wave_size := 1
 @export var max_spawns := 0
-@export var starting_timer := 0
 
 @export var enabled := true
 
-var num_spawned : int
-var timer : float
+var num_spawned := 0
+var spawn_time := 0
 
 
 
 func _ready():
-	timer = starting_timer
+	spawn_time = Time.get_ticks_msec()
 
 
 
 func _physics_process(delta):
-	if !enabled:
+	if !enabled or num_spawned >= max_spawns:
 		return
 	
-	if Ship.global_position.direction_to(Vector3.ZERO).dot(Ship.velocity.normalized()) < 0:
-		timer += Ship.velocity.length() * delta
-		
-		if timer > travel_per_spawn:
-			timer = 0
-			
-			for i in range(randi_range(1, max_wave_size)):
-				if max_spawns < 1 or max_spawns > num_spawned:
-					num_spawned += 1
-					
-					var new = load(filepath).instantiate()
-					var spawn_dir = (Vector3(randf_range(-0.5, 0.5), randf_range(-0.5, 0.5), -1) + Ship.velocity.normalized()).normalized()
-					
-					add_sibling(new)
-					new.global_position = Ship.global_position + spawn_dir * spawn_distance
+	if (Time.get_ticks_msec() - spawn_time > delay * 1000 and get_tree().get_nodes_in_group(\"Enemies\").size() < max_enemies) or (Time.get_ticks_msec() - spawn_time > empty_delay * 1000 and get_tree().get_nodes_in_group(\"Enemies\").size() == 0):
+		spawn_time = Time.get_ticks_msec()
+		for i in range(randi_range(1, max_wave_size)):
+			num_spawned += 1
+			var new = load(filepath).instantiate()
+			add_sibling(new)
+			new.global_position = Ship.global_position + Vector3(randi_range(-distance, distance), randi_range(-distance, distance), randf_range(-distance, -distance * 2)).limit_length(distance)
 "
 
 [node name="ObjectSpawner" type="Node"]

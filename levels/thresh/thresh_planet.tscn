@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3 uid="uid://c6l1cg2k28xun"]
+
+[ext_resource type="PackedScene" uid="uid://n1rgififa033" path="res://classes/planet_base.tscn" id="1_46kap"]
+[ext_resource type="Texture2D" uid="uid://ds2wul7utl7ri" path="res://levels/thresh/thresh.png" id="2_oys0i"]
+
+[node name="PlanetBase" instance=ExtResource("1_46kap")]
+quests = Array[Dictionary]([{
+"cargo": 8,
+"destination": "Nightshade",
+"parts": ["Railgun"]
+}, {}])
+num_quests = 1
+
+[node name="TextureRect" type="TextureRect" parent="." index="1"]
+layout_mode = 0
+offset_left = 549.0
+offset_top = -44.0
+offset_right = 1988.0
+offset_bottom = 1395.0
+texture = ExtResource("2_oys0i")

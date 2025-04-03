@@ -1,0 +1,50 @@
+[gd_scene load_steps=6 format=3 uid="uid://bc760ueqtuvoq"]
+
+[ext_resource type="Script" path="res://classes/part_base.gd" id="1_8mgwt"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wne0g"]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_ir52v"]
+_surfaces = [{
+"aabb": AABB(-0.5, -0.5, -0.5, 1, 1, 2.00001),
+"format": 34896613377,
+"index_count": 24,
+"index_data": PackedByteArray(0, 0, 1, 0, 2, 0, 1, 0, 5, 0, 2, 0, 1, 0, 4, 0, 5, 0, 4, 0, 3, 0, 5, 0, 1, 0, 3, 0, 4, 0, 1, 0, 0, 0, 3, 0, 5, 0, 0, 0, 2, 0, 5, 0, 3, 0, 0, 0),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 6,
+"vertex_data": PackedByteArray(204, 76, 255, 127, 254, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 0, 0, 0, 0, 50, 179, 255, 127, 254, 255, 0, 0, 255, 255, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0)
+}]
+blend_shape_mode = 0
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_kacj6"]
+resource_name = "spike_Cube_018"
+_surfaces = [{
+"aabb": AABB(-0.5, -0.5, -0.5, 1, 1, 2.00001),
+"attribute_data": PackedByteArray(255, 31, 255, 63, 255, 159, 255, 255, 255, 223, 255, 63, 255, 31, 255, 127, 255, 95, 255, 191, 255, 95, 255, 191, 255, 159, 255, 191, 255, 159, 255, 191, 255, 223, 255, 127, 255, 95, 255, 63, 255, 95, 255, 63, 255, 159, 255, 63, 255, 95, 255, 127, 255, 95, 255, 127, 255, 95, 255, 127, 255, 159, 255, 127, 255, 159, 255, 127, 255, 159, 255, 127),
+"format": 34896613399,
+"index_count": 24,
+"index_data": PackedByteArray(1, 0, 4, 0, 6, 0, 5, 0, 15, 0, 7, 0, 5, 0, 13, 0, 15, 0, 14, 0, 10, 0, 17, 0, 3, 0, 9, 0, 12, 0, 3, 0, 0, 0, 9, 0, 16, 0, 2, 0, 8, 0, 16, 0, 11, 0, 2, 0),
+"material": SubResource("StandardMaterial3D_wne0g"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 18,
+"vertex_data": PackedByteArray(204, 76, 255, 127, 254, 255, 4, 182, 204, 76, 255, 127, 254, 255, 235, 209, 204, 76, 255, 127, 254, 255, 255, 255, 0, 0, 0, 0, 0, 0, 4, 182, 0, 0, 0, 0, 0, 0, 235, 209, 0, 0, 0, 0, 0, 0, 255, 255, 0, 0, 255, 255, 0, 0, 235, 209, 0, 0, 255, 255, 0, 0, 255, 255, 0, 0, 255, 255, 0, 0, 255, 255, 50, 179, 255, 127, 254, 255, 4, 182, 50, 179, 255, 127, 254, 255, 235, 209, 50, 179, 255, 127, 254, 255, 255, 255, 255, 255, 0, 0, 0, 0, 4, 182, 255, 255, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 235, 209, 255, 255, 255, 255, 0, 0, 255, 255, 255, 255, 255, 255, 0, 0, 255, 255, 255, 255, 255, 255, 0, 0, 235, 209, 0, 0, 255, 127, 129, 215, 129, 215, 255, 127, 30, 184, 0, 0, 255, 127, 129, 215, 129, 215, 255, 191, 255, 191, 129, 215, 129, 215, 255, 191, 255, 191, 255, 127, 30, 184, 0, 0, 255, 127, 125, 40, 125, 40, 255, 127, 30, 184, 0, 0, 255, 127, 255, 191, 255, 191, 125, 40, 125, 40, 255, 191, 255, 191, 255, 127, 30, 184, 125, 40, 125, 40)
+}]
+blend_shape_mode = 0
+shadow_mesh = SubResource("ArrayMesh_ir52v")
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_xtxoy"]
+points = PackedVector3Array(0.5, 0.5, -0.5, 0.19998, -9.78708e-05, 1.49998, 0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.200078, -9.78708e-05, 1.49998, -0.5, -0.5, -0.5)
+
+[node name="Spike" type="StaticBody3D"]
+script = ExtResource("1_8mgwt")
+type = "Spike"
+mass = 0.5
+health = 1.0
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("ArrayMesh_kacj6")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("ConvexPolygonShape3D_xtxoy")

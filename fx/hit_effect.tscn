@@ -18,7 +18,7 @@ spread = 180.0
 initial_velocity_max = 10.0
 gravity = Vector3(0, 0, 0)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_n0a60"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_s8ntm"]
 transparency = 1
 albedo_color = Color(0.592157, 0.592157, 0.592157, 0.0980392)
 billboard_mode = 3
@@ -27,7 +27,7 @@ particles_anim_v_frames = 1
 particles_anim_loop = false
 
 [sub_resource type="QuadMesh" id="QuadMesh_dpgbg"]
-material = SubResource("StandardMaterial3D_n0a60")
+material = SubResource("StandardMaterial3D_s8ntm")
 size = Vector2(0.75, 0.75)
 
 [node name="DefaultDestruction" type="Node3D"]

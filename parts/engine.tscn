@@ -94,7 +94,7 @@ initial_velocity_min = 45.0
 initial_velocity_max = 50.0
 gravity = Vector3(0, 0, 0)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gupfa"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8vd7g"]
 transparency = 1
 blend_mode = 1
 shading_mode = 0
@@ -102,7 +102,7 @@ albedo_color = Color(0.705882, 0.392157, 0, 0.0980392)
 billboard_mode = 1
 
 [sub_resource type="QuadMesh" id="QuadMesh_h5g4c"]
-material = SubResource("StandardMaterial3D_gupfa")
+material = SubResource("StandardMaterial3D_8vd7g")
 size = Vector2(0.75, 0.75)
 
 [node name="Engine" type="StaticBody3D"]
@@ -113,7 +113,7 @@ health = 0.5
 attributes = {
 "Thrust": Vector3(0, 0, 10)
 }
-color_indexes = [0, 0]
+color_indexes = [0, 1]
 
 [node name="Mesh" type="MeshInstance3D" parent="."]
 transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, 0)

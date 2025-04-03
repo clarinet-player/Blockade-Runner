@@ -1,0 +1,24 @@
+[gd_scene load_steps=3 format=3 uid="uid://ctic8sa4ndms0"]
+
+[ext_resource type="PackedScene" uid="uid://n1rgififa033" path="res://classes/planet_base.tscn" id="1_5lshe"]
+[ext_resource type="Texture2D" uid="uid://dslhykpb7p1nb" path="res://levels/sarnus/sarnus.png" id="2_7avww"]
+
+[node name="PlanetBase" instance=ExtResource("1_5lshe")]
+quests = Array[Dictionary]([{
+"cargo": 4,
+"destination": "Thresh",
+"parts": ["Slab", "Slab", "Slab", "Slab"]
+}, {
+"cargo": 4,
+"destination": "Brand",
+"parts": ["Ammo"]
+}])
+num_quests = 2
+
+[node name="TextureRect" type="TextureRect" parent="." index="1"]
+layout_mode = 0
+offset_left = 643.0
+offset_top = -66.0
+offset_right = 2053.0
+offset_bottom = 1344.0
+texture = ExtResource("2_7avww")

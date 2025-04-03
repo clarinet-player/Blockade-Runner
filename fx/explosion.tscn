@@ -1,0 +1,75 @@
+[gd_scene load_steps=8 format=3 uid="uid://bho1mecygmxs4"]
+
+[sub_resource type="GDScript" id="GDScript_rjahk"]
+script/source = "extends Node3D
+
+
+func _ready():
+	var audio = load(\"res://classes/audio_player.tscn\").instantiate()
+	audio.start(self, \"res://fx/missile_hit.mp3\")
+	$GPUParticles3D3.emitting = true
+	$GPUParticles3D2.emitting = true
+	var tween = create_tween()
+	tween.tween_property($OmniLight3D, \"light_energy\", 0.0, 0.75)
+	await tween.finished
+	await get_tree().create_timer(7.5).timeout
+	queue_free()
+"
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_bttxh"]
+lifetime_randomness = 0.7
+spread = 180.0
+initial_velocity_min = 5.0
+initial_velocity_max = 15.0
+gravity = Vector3(0, 0, 0)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_imdw6"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(1, 0.654902, 0.25098, 0.588235)
+billboard_mode = 1
+
+[sub_resource type="QuadMesh" id="QuadMesh_xnt1t"]
+material = SubResource("StandardMaterial3D_imdw6")
+size = Vector2(0.4, 0.4)
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_ojfaw"]
+lifetime_randomness = 0.5
+spread = 180.0
+initial_velocity_min = 15.0
+initial_velocity_max = 25.0
+gravity = Vector3(0, 0, 0)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8qcnh"]
+transparency = 1
+albedo_color = Color(0.4, 0.4, 0.4, 0.411765)
+billboard_mode = 1
+
+[sub_resource type="QuadMesh" id="QuadMesh_78omc"]
+material = SubResource("StandardMaterial3D_8qcnh")
+
+[node name="Explosion" type="Node3D"]
+script = SubResource("GDScript_rjahk")
+
+[node name="GPUParticles3D2" type="GPUParticles3D" parent="."]
+emitting = false
+amount = 64
+lifetime = 1.5
+one_shot = true
+explosiveness = 0.95
+process_material = SubResource("ParticleProcessMaterial_bttxh")
+draw_pass_1 = SubResource("QuadMesh_xnt1t")
+
+[node name="GPUParticles3D3" type="GPUParticles3D" parent="."]
+emitting = false
+amount = 128
+lifetime = 3.0
+one_shot = true
+explosiveness = 0.75
+process_material = SubResource("ParticleProcessMaterial_ojfaw")
+draw_pass_1 = SubResource("QuadMesh_78omc")
+
+[node name="OmniLight3D" type="OmniLight3D" parent="."]
+light_color = Color(1, 0.654902, 0.25098, 1)
+light_energy = 10.0
+omni_range = 20.0

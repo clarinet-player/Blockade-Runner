@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3 uid="uid://n1rgififa033"]
+[gd_scene load_steps=5 format=3 uid="uid://n1rgififa033"]
 
 [ext_resource type="Theme" uid="uid://co8tjlbj1cjyd" path="res://assets/theme.tres" id="1_bam06"]
 [ext_resource type="Theme" uid="uid://6ftdqmtb2drx" path="res://assets/theme2.tres" id="2_roblw"]
@@ -6,24 +6,64 @@
 [sub_resource type="GDScript" id="GDScript_ftja6"]
 script/source = "extends Control
 
+
+@export var quests : Array[Dictionary]
+@export var num_quests := 3
+var spawned_quests : Array[Dictionary]
+
+
 func _ready():
-	load_data()
+	while spawned_quests.size() < num_quests:
+		var new = quests[(GameManager.planet_seed + spawned_quests.size()) % quests.size()]
+		spawned_quests.append(new)
+		if GameManager.quests.has(new):
+			continue
+		var panel = $HBoxContainer/PanelContainer.duplicate()
+		$HBoxContainer.add_child(panel)
+		panel.get_node(\"VBoxContainer/Label2\").text = \"Deliver \" + str(new.cargo) + \" cargo to \" + new.destination
+		panel.get_node(\"VBoxContainer/Label3\").text = \"Reward: \" + str(new.parts)
+		if Ship.cargo_capacity < new.cargo:
+			panel.get_node(\"VBoxContainer/Label4\").show()
+		panel.gui_input.connect(on_input.bind(new, panel))
+	$HBoxContainer/PanelContainer.hide()
+
+
+
+func show_rewards(reward : Array):
+	$HBoxContainer.hide()
+	$PanelContainer.show()
+	$PanelContainer/VBoxContainer/Label2.text = reward
+
+
 
 func edit_ship():
 	GameManager.start_editor()
 
+
 func leave():
 	GameManager.start_map()
 
-func refuel():
-	GameManager.credits -= Ship.fuel_capacity - GameManager.fuel
-	GameManager.fuel = Ship.fuel_capacity
-	load_data()
 
-func load_data():
-	$VBoxContainer2/Label.text = \"Fuel: \" + str(snapped(GameManager.fuel, 0.1)) + \" / \" + str(Ship.fuel_capacity)
-	$VBoxContainer2/Label2.text = \"Credits: \" + str(snapped(GameManager.credits, 0.1))
+func on_input(event, quest : Dictionary, panel : Control):
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed and Ship.cargo_capacity >= quest.cargo:
+		GameManager.quests.append(quest)
+		panel.hide()
+		GameManager.save_game()
+
+
+func on_gui_input(event):
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		$PanelContainer.hide()
+		$HBoxContainer.show()
 "
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_76yds"]
+bg_color = Color(0.117647, 0.117647, 0.117647, 1)
+border_width_left = 10
+border_width_top = 10
+border_width_right = 10
+border_width_bottom = 10
+border_color = Color(0.117647, 0.117647, 0.117647, 1)
 
 [node name="PlanetBase" type="Control"]
 layout_mode = 3
@@ -43,62 +83,101 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 1)
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -268.0
-offset_top = -59.0
-offset_right = 268.0
-offset_bottom = 59.0
+offset_left = -926.0
+offset_top = -130.5
+offset_right = 926.0
+offset_bottom = 130.5
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 25
+theme_override_constants/separation = 40
+alignment = 1
 
-[node name="Button" type="Button" parent="VBoxContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="Button" type="Button" parent="HBoxContainer/VBoxContainer"]
 layout_mode = 2
 theme = ExtResource("1_bam06")
-text = "Edit Ship"
-
-[node name="Button3" type="Button" parent="VBoxContainer"]
-layout_mode = 2
-theme = ExtResource("1_bam06")
-text = "Refuel
+theme_override_styles/normal = SubResource("StyleBoxFlat_76yds")
+text = "Edit Ship
 "
 
-[node name="Button2" type="Button" parent="VBoxContainer"]
+[node name="Button2" type="Button" parent="HBoxContainer/VBoxContainer"]
 layout_mode = 2
 theme = ExtResource("1_bam06")
-text = "Leave
-"
+theme_override_styles/normal = SubResource("StyleBoxFlat_76yds")
+text = "Exit to Map"
 
-[node name="VBoxContainer2" type="VBoxContainer" parent="."]
+[node name="PanelContainer" type="PanelContainer" parent="HBoxContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_76yds")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer/PanelContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="Label" type="Label" parent="HBoxContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+theme = ExtResource("1_bam06")
+text = "Quest"
+horizontal_alignment = 1
+
+[node name="Label2" type="Label" parent="HBoxContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+theme = ExtResource("2_roblw")
+text = "Deliver 4 cargo to Brand"
+
+[node name="Label3" type="Label" parent="HBoxContainer/PanelContainer/VBoxContainer"]
+layout_mode = 2
+theme = ExtResource("2_roblw")
+text = "Reward: Engine x2"
+
+[node name="Label4" type="Label" parent="HBoxContainer/PanelContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+theme = ExtResource("2_roblw")
+theme_override_colors/font_color = Color(1, 0, 0, 1)
+text = "Out of cargo space!"
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+visible = false
 layout_mode = 1
-anchors_preset = 6
-anchor_left = 1.0
+anchors_preset = 8
+anchor_left = 0.5
 anchor_top = 0.5
-anchor_right = 1.0
+anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -160.0
+offset_left = -20.0
 offset_top = -20.0
-offset_right = -96.0
+offset_right = 20.0
 offset_bottom = 20.0
-grow_horizontal = 0
+grow_horizontal = 2
 grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_76yds")
 
-[node name="Label" type="Label" parent="VBoxContainer2"]
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="PanelContainer/VBoxContainer"]
 layout_mode = 2
 theme = ExtResource("2_roblw")
-text = "Fuel: "
+text = "Quest Rewards:"
 
-[node name="Label2" type="Label" parent="VBoxContainer2"]
+[node name="Label2" type="Label" parent="PanelContainer/VBoxContainer"]
 layout_mode = 2
 theme = ExtResource("2_roblw")
-text = "Credits:"
+text = "reward
+"
 
-[connection signal="button_down" from="VBoxContainer/Button" to="." method="edit_ship"]
-[connection signal="button_down" from="VBoxContainer/Button3" to="." method="refuel"]
-[connection signal="button_down" from="VBoxContainer/Button2" to="." method="leave"]
+[connection signal="button_down" from="HBoxContainer/VBoxContainer/Button" to="." method="edit_ship"]
+[connection signal="button_down" from="HBoxContainer/VBoxContainer/Button2" to="." method="leave"]
+[connection signal="gui_input" from="PanelContainer" to="." method="on_gui_input"]

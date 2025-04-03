@@ -1,4 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://coudcqs1vosss"]
+[gd_scene load_steps=6 format=3 uid="uid://coudcqs1vosss"]
+
+[ext_resource type="Theme" uid="uid://6ftdqmtb2drx" path="res://assets/theme2.tres" id="1_db0x0"]
+[ext_resource type="Texture2D" uid="uid://c2ocxf05oge1a" path="res://assets/wasd.png" id="2_tphs6"]
+[ext_resource type="Texture2D" uid="uid://cp7dy13g8hbo8" path="res://assets/Mouse_Left_Key_Light.png" id="3_hghau"]
 
 [sub_resource type="GDScript" id="GDScript_7sqc8"]
 script/source = "extends Node
@@ -13,45 +17,26 @@ enum states {
 	planet
 }
 var game_state := states.menu
-var tweening_in := false
-var tweening_out := false
-signal tweening_finished
 
 
 
-var file_number : int
-var location : String
-var autosaved_ship : Dictionary
-var quests : Dictionary
-var parts : Dictionary
-var fuel : float
-var credits : float
+var file_number := -1
+var location := \"\"
+var planet_seed := 0
+var autosaved_ship := {}
+var quests := []
+var parts := {}
 
 var ships
+var planet_data
+var part_data
 
-
+ 
 
 func start_combat(level := \"\"):
-	if tweening_in or tweening_out:
-		return
-	
 	if level.is_empty():
 		level = location
-	match level:
-		\"Eden\":
-			get_tree().change_scene_to_file(\"res://levels/eden_combat.tscn\")
-		\"Brand\":
-			get_tree().change_scene_to_file(\"res://levels/brand_combat.tscn\")
-		\"Icle\":
-			get_tree().change_scene_to_file(\"res://levels/icle_combat.tscn\")
-		\"Last Chance\":
-			get_tree().change_scene_to_file(\"res://levels/last_chance_combat.tscn\")
-		\"Tarsis\":
-			get_tree().change_scene_to_file(\"res://levels/tarsis_combat.tscn\")
-		\"Sarnus\":
-			get_tree().change_scene_to_file(\"res://levels/sarnus_combat.tscn\")
-		\"Thresh\":
-			get_tree().change_scene_to_file(\"res://levels/thresh_combat.tscn\")
+	get_tree().change_scene_to_file(planet_data[level].combat)
 	
 	Ship.calculate_stats()
 	Ship.reset()
@@ -60,44 +45,42 @@ func start_combat(level := \"\"):
 
 
 
-func start_planet(save := true, planet := \"\"):
-	if save:
-		save_game()
+func start_planet(save := true, planet := \"\", new_seed := false, load_ship := false):
+	if new_seed:
+		planet_seed = randi()
 	
 	if !planet.is_empty():
 		location = planet
-	match location:
-		\"Eden\":
-			get_tree().change_scene_to_file(\"res://levels/eden_planet.tscn\")
-		\"Brand\":
-			get_tree().change_scene_to_file(\"res://levels/brand_planet.tscn\")
-		\"Icle\":
-			get_tree().change_scene_to_file(\"res://levels/icle_planet.tscn\")
-		\"Last Chance\":
-			get_tree().change_scene_to_file(\"res://levels/last_chance_station.tscn\")
-		\"Tarsis\":
-			get_tree().change_scene_to_file(\"res://levels/tarsis_planet.tscn\")
-		\"Sarnus\":
-			get_tree().change_scene_to_file(\"res://levels/sarnus_planet.tscn\")
-		\"Thresh\":
-			get_tree().change_scene_to_file(\"res://levels/thresh_planet.tscn\")
+	get_tree().change_scene_to_file(planet_data[location].planet)
 	
 	game_state = states.planet
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	for child in get_children():
 		child.queue_free()
+	
+	var completed = []
+	for quest in quests:
+		if quest.destination == location:
+			completed.append(quest)
+	for quest in completed:
+		for part in quest.parts:
+			if parts.has(part):
+				parts[part] += 1
+			else:
+				parts[part] = 1
+		quests.erase(quest)
+	
+	if load_ship:
+		Ship.load_data(autosaved_ship, \"Untitled Ship\")
 	Ship.calculate_stats()
-	if fuel > Ship.fuel_capacity:
-		credits += fuel - Ship.fuel_capacity
-		fuel = Ship.fuel_capacity
+	
+	if save:
+		save_game()
 
 
 
 func start_editor():
-	if tweening_in or tweening_out:
-		return
-	
-	get_tree().change_scene_to_file(\"res://ship_editor.tscn\")
+	get_tree().change_scene_to_file(\"res://menus/ship_editor.tscn\")
 	game_state = states.editor
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	Ship.reset()
@@ -105,7 +88,7 @@ func start_editor():
 
 
 func start_map():
-	get_tree().change_scene_to_file(\"res://map.tscn\")
+	get_tree().change_scene_to_file(\"res://menus/map.tscn\")
 	
 	game_state = states.planet
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -118,17 +101,19 @@ func new_game():
 	file_number = -1
 	location = \"Eden\"
 	autosaved_ship = read_file(\"res://assets/default_ship.json\")
-	quests = {}
-	parts = {}
-	fuel = 10.0
-	credits = 10
+	quests = []
+	parts = {\"Block\": 6, \"Slab Engine\": 4, \"Fuel Tank\": 2, \"Cargo\": 4, \"Engine\": 4, \"Gun\": 2}
 	
 	ships = read_file(\"user://ship_saves.json\")
 	if ships == null:
 		ships = Array()
 	
+	planet_data = GameManager.read_file(\"res://levels/planet_data.json\")
+	part_data = GameManager.read_file(\"res://parts/part_data.json\")
+	
 	Ship.load_data(autosaved_ship, \"Untitled Ship\")
 	start_combat()
+	$\"tutorial prompts\".start()
 
 
 
@@ -141,6 +126,9 @@ func load_game(file : int):
 	if ships == null:
 		ships = Array()
 	
+	planet_data = GameManager.read_file(\"res://levels/planet_data.json\")
+	part_data = GameManager.read_file(\"res://parts/part_data.json\")
+	
 	file_number = file
 	
 	if data.has(\"Location\"): location = data[\"Location\"]
@@ -150,16 +138,10 @@ func load_game(file : int):
 	else: autosaved_ship = read_file(\"res://assets/default_ship.json\")
 	
 	if data.has(\"Quests\"): quests = data[\"Quests\"]
-	else: quests = {}
+	else: quests = []
 	
 	if data.has(\"Parts\"): parts = data[\"Parts\"]
 	else: parts = {}
-	
-	if data.has(\"Fuel\"): fuel = data[\"Fuel\"]
-	else: fuel = 10.0
-	
-	if data.has(\"Credits\"): credits = data[\"Credits\"]
-	else: credits = 10
 	
 	Ship.load_data(autosaved_ship, \"Untitled Ship\")
 	start_planet(false)
@@ -176,18 +158,14 @@ func save_game():
 		\"Location\": location,
 		\"Autosaved Ship\": autosaved_ship,
 		\"Quests\": quests,
-		\"Parts\": parts,
-		\"Fuel\": fuel,
-		\"Credits\" : credits
+		\"Parts\": parts
 		})
 	else:
 		data[file_number] = {
 			\"Location\": location,
 			\"Autosaved Ship\": autosaved_ship,
 			\"Quests\": quests,
-			\"Parts\": parts,
-			\"Fuel\": fuel,
-			\"Credits\" : credits
+			\"Parts\": parts
 		}
 	write_file(\"user://game_data.json\", data)
 
@@ -198,7 +176,7 @@ func read_file(filename : String):
 		return null
 	
 	var file = FileAccess.open(filename, FileAccess.READ)
-	var string = file.get_line()
+	var string = file.get_as_text()
 	var json = JSON.new()
 	file.close()
 	
@@ -215,5 +193,103 @@ func write_file(filename : String, data):
 	file.close()
 "
 
+[sub_resource type="GDScript" id="GDScript_0cmpd"]
+script/source = "extends VBoxContainer
+
+
+
+var w := false
+var a := false
+var s := false
+var d := false
+var shift := false
+var ctrl := false
+var shoot := false
+
+
+
+func start():
+	$\"move prompt\".show()
+	
+	w = false
+	a = false
+	s = false
+	d = false
+	shift = false
+	ctrl = false
+	
+	while !w or !a or !s or !d or !shift or !ctrl:
+		if Input.is_action_just_pressed(\"Forward\"): w = true
+		if Input.is_action_just_pressed(\"Back\"): s = true
+		if Input.is_action_just_pressed(\"Left\"): a = true
+		if Input.is_action_just_pressed(\"Right\"): d = true
+		if Input.is_action_just_pressed(\"Down\"): ctrl = true
+		if Input.is_action_just_pressed(\"Up\"): shift = true
+		
+		await get_tree().process_frame
+	
+	$\"move prompt\".hide()
+	$\"shoot prompt\".show()
+	
+	shoot = false
+	
+	while !shoot:
+		if Input.is_action_just_pressed(\"Shoot Primary\"): shoot = true
+		await get_tree().process_frame
+	
+	$\"shoot prompt\".hide()
+"
+
 [node name="GameManager" type="Node"]
 script = SubResource("GDScript_7sqc8")
+
+[node name="tutorial prompts" type="VBoxContainer" parent="."]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -100.0
+offset_top = -507.0
+offset_right = 100.0
+offset_bottom = -393.0
+grow_horizontal = 2
+grow_vertical = 0
+script = SubResource("GDScript_0cmpd")
+
+[node name="move prompt" type="VBoxContainer" parent="tutorial prompts"]
+visible = false
+layout_mode = 2
+
+[node name="Label" type="Label" parent="tutorial prompts/move prompt"]
+layout_mode = 2
+theme = ExtResource("1_db0x0")
+text = "Move"
+horizontal_alignment = 1
+
+[node name="TextureRect" type="TextureRect" parent="tutorial prompts/move prompt"]
+custom_minimum_size = Vector2(200, 75)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("2_tphs6")
+expand_mode = 1
+
+[node name="shoot prompt" type="VBoxContainer" parent="tutorial prompts"]
+visible = false
+layout_mode = 2
+
+[node name="Label" type="Label" parent="tutorial prompts/shoot prompt"]
+layout_mode = 2
+theme = ExtResource("1_db0x0")
+text = "Shoot
+"
+horizontal_alignment = 1
+
+[node name="TextureRect" type="TextureRect" parent="tutorial prompts/shoot prompt"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("3_hghau")
+expand_mode = 1

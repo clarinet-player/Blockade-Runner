@@ -10,20 +10,23 @@ var player : bool
 
 var velocity := Vector3.ZERO
 var spawn_time : int
+var lifetime := 6000
 
 var emitted_sound := false
+
+@onready var mesh := $MeshInstance3D
 
 
 
 func _ready():
 	look_at(global_position + velocity)
 	spawn_time = Time.get_ticks_msec()
-	$MeshInstance3D.mesh.height = velocity.length() / 30
+	$MeshInstance3D.mesh.height = min(velocity.length() / 30, 10)
 
 
 
 func _physics_process(delta):
-	if Time.get_ticks_msec() - spawn_time > 6000:
+	if Time.get_ticks_msec() - spawn_time > lifetime:
 		queue_free()
 		return
 	

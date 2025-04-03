@@ -1,0 +1,80 @@
+[gd_scene load_steps=5 format=3 uid="uid://hy2gw41kwqc7"]
+
+[ext_resource type="Texture2D" uid="uid://7skg0yf8gas4" path="res://assets/red_arrow.png" id="1_5v6jn"]
+
+[sub_resource type="GDScript" id="GDScript_prpl3"]
+script/source = "extends Node3D
+
+
+var player := true
+
+var velocity := Vector3.ZERO
+var trigger_radius := 20.0
+var blast_radius := 30.0
+var damage := 12.0
+
+
+
+func _physics_process(delta):
+	global_translate(velocity * delta)
+	
+	if player:
+		for enemy in get_tree().get_nodes_in_group(\"Enemies\"):
+			if global_position.distance_to(enemy.global_position) < trigger_radius:
+				for enemy2 in get_tree().get_nodes_in_group(\"Enemies\"):
+					if global_position.distance_to(enemy.global_position) < blast_radius:
+						enemy2.damage(damage, enemy2.get_child(-1), global_position.direction_to(enemy2.global_position) * 15)
+				queue_free()
+	else:
+		if global_position.distance_to(Ship.global_position) < trigger_radius:
+			Ship.damage(damage, Ship.get_child(-1), global_position.direction_to(Ship.global_position) * 15)
+"
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xq60t"]
+shading_mode = 0
+albedo_color = Color(0.556863, 0, 0, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_0laky"]
+material = SubResource("StandardMaterial3D_xq60t")
+radius = 1.0
+height = 2.0
+
+[node name="Bomb" type="Node3D"]
+script = SubResource("GDScript_prpl3")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_0laky")
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(20, 20)
+
+[node name="TextureRect" type="TextureRect" parent="Control"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -470.0
+offset_right = 12.0
+offset_bottom = -438.0
+grow_horizontal = 2
+grow_vertical = 2
+rotation = 0.785398
+texture = ExtResource("1_5v6jn")

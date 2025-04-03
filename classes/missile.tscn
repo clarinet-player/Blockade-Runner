@@ -1,14 +1,15 @@
-[gd_scene load_steps=5 format=3 uid="uid://s7f4k78fynew"]
+[gd_scene load_steps=6 format=3 uid="uid://s7f4k78fynew"]
 
 [ext_resource type="Texture2D" uid="uid://035bxp43r5oo" path="res://assets/blue_arrow.png" id="1_f3vkm"]
+[ext_resource type="AudioStream" uid="uid://cl3failnnv3ml" path="res://fx/missile_scream.mp3" id="2_s136q"]
 
 [sub_resource type="GDScript" id="GDScript_sjcx7"]
 script/source = "extends Node3D
 
 
 
-var damage : float
-var player : bool
+var damage := 1.0
+var player := false
 var target : Node3D
 
 enum s {
@@ -33,7 +34,9 @@ func _ready():
 	if player:
 		audio = load(\"res://classes/audio_player.tscn\").instantiate()
 		audio.start(self, \"res://fx/missile_launch.mp3\")
-	await get_tree().create_timer(1.3).timeout
+	else:
+		$AudioStreamPlayer3D.play()
+	await get_tree().create_timer(1.35).timeout
 	state = s.coast
 	await get_tree().create_timer(10.0).timeout
 	queue_free()
@@ -80,9 +83,6 @@ func _physics_process(delta):
 		s.coast:
 			if global_position.distance_to(target.global_position) < 50:
 				state = s.approach
-				if !player:
-					audio = load(\"res://classes/audio_player.tscn\").instantiate()
-					audio.start(self, \"res://fx/missile_engines.mp3\")
 				await get_tree().create_timer(1.0).timeout
 				state = s.drift
 		
@@ -117,12 +117,12 @@ func _physics_process(delta):
 	global_translate(dir * speed * delta)
 "
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2ig67"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wtdh4"]
 shading_mode = 0
 albedo_color = Color(0.309804, 0.513726, 1, 1)
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_pem23"]
-material = SubResource("StandardMaterial3D_2ig67")
+material = SubResource("StandardMaterial3D_wtdh4")
 height = 2.5
 
 [node name="Missile" type="Node3D"]
@@ -165,3 +165,9 @@ grow_horizontal = 2
 grow_vertical = 2
 rotation = 0.785398
 texture = ExtResource("1_f3vkm")
+
+[node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("2_s136q")
+attenuation_model = 3
+max_distance = 200.0
+panning_strength = 1.5

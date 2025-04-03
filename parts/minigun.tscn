@@ -115,7 +115,7 @@ type = "Minigun"
 mass = 7.5
 health = 1.0
 attributes = {
-"Attack Speed": 10.0
+"Attack Speed": 8.0
 }
 color_indexes = [0, 0, 0]
 

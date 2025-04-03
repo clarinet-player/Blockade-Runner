@@ -1,0 +1,30 @@
+[gd_scene load_steps=5 format=3 uid="uid://cowx1qb2mtdn0"]
+
+[ext_resource type="Script" path="res://classes/part_base.gd" id="1_51stc"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8diw5"]
+transparency = 1
+blend_mode = 1
+cull_mode = 2
+shading_mode = 0
+albedo_color = Color(1, 1, 1, 0.0392157)
+
+[sub_resource type="SphereMesh" id="SphereMesh_bpu20"]
+material = SubResource("StandardMaterial3D_8diw5")
+radius = 3.5
+height = 9.0
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_cnnp1"]
+points = PackedVector3Array(3.41137, 0.817128, -0.404244, -3.40422, -0.953983, -0.268231, -3.40383, -0.953873, 0.2762, -0.683144, 4.396, -0.27032, 0.685434, -0.408353, 3.41317, 0.411077, -2.98927, -2.57814, 0.686092, -4.23114, 0.95933, -0.538765, 1.49237, -3.25326, -0.403163, 2.98503, 2.58248, -2.01324, -1.21014, 2.6941, -2.97398, 2.30117, 0.409546, 2.31323, 3.25965, 0.682873, 1.88779, 1.88263, -2.55229, 3.1106, -1.75593, 0.813872, -2.1631, -3.25078, -1.07922, -2.29008, 0.809144, -2.56025, 2.69247, -2.15015, -1.47446, 2.42334, 1.3433, 2.28911, -1.48323, -3.38033, 1.76194, 1.3483, -2.28501, 2.69194, 0.276201, -0.953877, -3.40385, -0.541202, 3.8173, -1.76841, -2.14415, 1.34243, 2.55497, -1.75187, -1.75653, -2.69826, 0.278282, -4.39539, -0.682376, 1.89674, 3.51547, -1.07672, -2.5483, 2.41843, -1.47372, 2.16437, -0.674394, -2.69646, 0.818659, 4.07571, 1.22632, -1.61207, 3.50248, 1.48556, 2.04716, -3.54219, -0.676831, -0.267706, -2.57819, 2.85392)
+
+[node name="Shield" type="StaticBody3D"]
+script = ExtResource("1_51stc")
+type = "Shield"
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
+mesh = SubResource("SphereMesh_bpu20")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
+shape = SubResource("ConvexPolygonShape3D_cnnp1")
