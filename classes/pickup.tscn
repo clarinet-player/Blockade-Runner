@@ -1,0 +1,130 @@
+[gd_scene load_steps=14 format=3 uid="uid://bt6efwgoyob00"]
+
+[ext_resource type="Texture2D" uid="uid://cgv1eq10s3k6o" path="res://assets/white_blob.png" id="1_y8sbv"]
+[ext_resource type="Texture2D" uid="uid://dgrq81ejnurwm" path="res://assets/green_blob.png" id="2_tjevx"]
+[ext_resource type="Texture2D" uid="uid://c5o6kdmxax7jx" path="res://assets/yellow_blob.png" id="3_crity"]
+[ext_resource type="Texture2D" uid="uid://be5niob2s16hk" path="res://assets/orange_blob.png" id="4_4g417"]
+
+[sub_resource type="GDScript" id="GDScript_n56wb"]
+script/source = "extends Node3D
+class_name Pickup
+
+
+
+var credits := 0
+var part := \"\"
+var shield := false
+var power := false
+var collected := false
+
+
+
+func _ready():
+	$White.hide()
+	if shield:
+		$White.show()
+	elif credits > 0:
+		$Yellow.show()
+	elif !part.is_empty():
+		$Green.show()
+	else:
+		$Orange.show()
+
+
+
+func _physics_process(delta):
+	if collected:
+		return
+	if global_position.distance_to(Ship.global_position) < 5:
+		if shield:
+			Ship.stored_shield += 0.25
+			load(\"res://classes/audio_player.tscn\").instantiate().start(null, \"res://assets/shield_collect.mp3\")
+			queue_free()
+		elif credits > 0:
+			collected = true
+			load(\"res://classes/audio_player.tscn\").instantiate().start(null, \"res://assets/coin_collect.mp3\")
+			hide()
+		elif !part.is_empty():
+			collected = true
+			load(\"res://classes/audio_player.tscn\").instantiate().start(null, \"res://assets/collect_coin.mp3\")
+			hide()
+		else:
+			Ship.power.append(10.0)
+			load(\"res://classes/audio_player.tscn\").instantiate().start(null, \"res://assets/collect_power.mp3\")
+			queue_free()
+		return
+	if shield or credits > 0:
+		global_translate(global_position.direction_to(Ship.global_position) * 120 * delta)
+		global_translate(Ship.velocity * 0.4 * delta)
+	else:
+		global_translate(global_position.direction_to(Ship.global_position) * 50 * delta)
+		global_translate(Ship.velocity * 0.1 * delta)
+"
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6prlv"]
+shading_mode = 0
+albedo_color = Color(0.862745, 0.862745, 0.862745, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_dry8x"]
+material = SubResource("StandardMaterial3D_6prlv")
+size = Vector3(0.5, 0.5, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_r5npi"]
+shading_mode = 0
+albedo_color = Color(0, 0.784314, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_o004g"]
+material = SubResource("StandardMaterial3D_r5npi")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fnl7t"]
+shading_mode = 0
+albedo_color = Color(0.980392, 0.784314, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_3anl8"]
+material = SubResource("StandardMaterial3D_fnl7t")
+size = Vector3(0.5, 0.5, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kv4vx"]
+shading_mode = 0
+albedo_color = Color(1, 0.372549, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_xbl6b"]
+material = SubResource("StandardMaterial3D_kv4vx")
+
+[node name="Pickup" type="Node3D"]
+script = SubResource("GDScript_n56wb")
+
+[node name="White" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_dry8x")
+
+[node name="Sprite3D" type="Sprite3D" parent="White"]
+pixel_size = 0.014
+billboard = 1
+texture = ExtResource("1_y8sbv")
+
+[node name="Green" type="MeshInstance3D" parent="."]
+visible = false
+mesh = SubResource("BoxMesh_o004g")
+
+[node name="Sprite3D" type="Sprite3D" parent="Green"]
+pixel_size = 0.026
+billboard = 1
+texture = ExtResource("2_tjevx")
+
+[node name="Yellow" type="MeshInstance3D" parent="."]
+visible = false
+mesh = SubResource("BoxMesh_3anl8")
+
+[node name="Sprite3D" type="Sprite3D" parent="Yellow"]
+pixel_size = 0.014
+billboard = 1
+texture = ExtResource("3_crity")
+
+[node name="Orange" type="MeshInstance3D" parent="."]
+visible = false
+mesh = SubResource("BoxMesh_xbl6b")
+
+[node name="Sprite3D" type="Sprite3D" parent="Orange"]
+pixel_size = 0.026
+billboard = 1
+texture = ExtResource("4_4g417")

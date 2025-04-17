@@ -1,9 +1,9 @@
 {
 	"Eden": {"planet": "res://levels/eden/planet.tscn", "combat": "res://levels/eden/combat.tscn", "map": "res://levels/eden/eden_map.png", "target": "res://levels/eden/eden_map2.png"},
-	"Brand": {"planet": "res://levels/brand/brand_planet.tscn", "combat": "res://levels/brand/brand_combat.tscn", "map": "res://levels/brand/brand_map.png", "target": "res://levels/brand/brand_map2.png"},
 	"Tarsis": {"planet": "res://levels/jungle/tarsis_planet.tscn", "combat": "res://levels/jungle/tarsis_combat.tscn", "map": "res://levels/jungle/jungle_map.png", "target": "res://levels/jungle/jungle_map2.png"},
-	"Icle": {"planet": "res://levels/icle/icle_planet.tscn", "combat": "res://levels/icle/icle_combat.tscn", "map": "res://levels/icle/icle_map.png", "target": "res://levels/icle/icle_map2.png"},
+	"Brand": {"planet": "res://levels/brand/brand_planet.tscn", "combat": "res://levels/brand/brand_combat.tscn", "map": "res://levels/brand/brand_map.png", "target": "res://levels/brand/brand_map2.png"},
 	"Sarnus": {"planet": "res://levels/sarnus/sarnus_planet.tscn", "combat": "res://levels/sarnus/sarnus_combat.tscn", "map": "res://levels/sarnus/sarnus_map.png", "target": "res://levels/sarnus/sarnus_map2.png"},
+	"Icle": {"planet": "res://levels/icle/icle_planet.tscn", "combat": "res://levels/icle/icle_combat.tscn", "map": "res://levels/icle/icle_map.png", "target": "res://levels/icle/icle_map2.png"},
 	"Thresh": {"planet": "res://levels/thresh/thresh_planet.tscn", "combat": "res://levels/thresh/thresh_combat.tscn", "map": "res://levels/thresh/thresh_map.png", "target": "res://levels/thresh/thresh_map2.png"},
 	"Nightshade": {"planet": "res://levels/nightshade/nightshade_planet.tscn", "combat": "res://levels/nightshade/nightshade_combat.tscn", "map": "res://levels/nightshade/nightshade_map.png", "target": "res://levels/nightshade/nightshade_map2.png"}
 }

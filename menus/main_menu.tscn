@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://b8ht1dacwtip"]
+[gd_scene load_steps=5 format=3 uid="uid://b8ht1dacwtip"]
 
 [ext_resource type="Theme" uid="uid://co8tjlbj1cjyd" path="res://assets/theme.tres" id="1_yq87v"]
+[ext_resource type="Sky" uid="uid://xfj61573c5m8" path="res://assets/stars.tres" id="2_bjt0j"]
 
 [sub_resource type="GDScript" id="GDScript_g62eo"]
 script/source = "extends Control
@@ -11,6 +12,8 @@ func _ready():
 	$loadmenu.hide()
 	
 	var file_num = 1
+	if GameManager.read_file(\"user://game_data.json\") == null:
+		GameManager.write_file(\"user://game_data.json\", [])
 	for save in GameManager.read_file(\"user://game_data.json\"):
 		var button = Button.new()
 		$loadmenu/VBoxContainer.add_child(button)
@@ -42,6 +45,10 @@ func _on_back_button_down():
 func load_game(num : int):
 	GameManager.load_game(num)
 "
+
+[sub_resource type="Environment" id="Environment_tqxoh"]
+background_mode = 2
+sky = ExtResource("2_bjt0j")
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -146,6 +153,11 @@ grow_vertical = 2
 theme = ExtResource("1_yq87v")
 text = "Load File
 "
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_tqxoh")
+
+[node name="Camera3D" type="Camera3D" parent="."]
 
 [connection signal="button_down" from="menu/load" to="." method="_on_load_button_down"]
 [connection signal="button_down" from="menu/new" to="." method="_on_new_button_down"]

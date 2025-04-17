@@ -1,127 +1,46 @@
-[gd_scene load_steps=9 format=3 uid="uid://cavmlkq1g7v84"]
+[gd_scene load_steps=8 format=3 uid="uid://cavmlkq1g7v84"]
 
 [ext_resource type="PackedScene" uid="uid://cwy0si0g7awhp" path="res://classes/combat_scene_base.tscn" id="1_l6btq"]
-[ext_resource type="PackedScene" uid="uid://b3x1gq71qfqfj" path="res://classes/object_spawner.tscn" id="2_qnfma"]
 [ext_resource type="PackedScene" uid="uid://dwqr8jq0alrsi" path="res://classes/celestial_body_sprite.tscn" id="3_84t4j"]
 [ext_resource type="Texture2D" uid="uid://dnuqlmvb47e0g" path="res://levels/icle/planet2.png" id="4_a7q54"]
 [ext_resource type="PackedScene" uid="uid://dom60hk30esk3" path="res://enemies/corporate_light.tscn" id="5_o35yc"]
 [ext_resource type="Texture2D" uid="uid://dlau5hb6qhvxv" path="res://levels/icle/moon2.png" id="6_44uff"]
+[ext_resource type="Texture2D" uid="uid://2yj3dndxvp2f" path="res://assets/blue_star.png" id="7_5uet2"]
 [ext_resource type="Texture2D" uid="uid://dgeqse8nwjo1a" path="res://assets/black_hole.png" id="7_pljlx"]
-[ext_resource type="PackedScene" uid="uid://sm7yk3haqq5" path="res://levels/icle/icy_asteroid.tscn" id="8_h2ltq"]
 
 [node name="CombatSceneBase" instance=ExtResource("1_l6btq")]
 planet = "Icle"
+base_difficulty = 2.5
+light = "res://enemies/corporate_light.tscn"
+medium = "res://enemies/corporate_medium.tscn"
+heavy = "res://enemies/corporate_heavy.tscn"
+boss = "res://enemies/corporate_boss.tscn"
 
-[node name="ObjectSpawner" parent="." index="0" instance=ExtResource("2_qnfma")]
-filepath = "res://enemies/corporate_light.tscn"
-distance = 250.0
-delay = 12.0
-empty_delay = 5.0
-max_wave_size = 2
-max_spawns = 14
+[node name="DirectionalLight3D" parent="." index="1"]
+light_color = Color(0.745098, 0.784314, 0.980392, 1)
 
-[node name="ObjectSpawner2" parent="." index="1" instance=ExtResource("2_qnfma")]
-filepath = "res://enemies/corporate_medium.tscn"
-distance = 320.0
-delay = 17.0
-empty_delay = 10.0
-max_spawns = 8
-
-[node name="ObjectSpawner3" parent="." index="2" instance=ExtResource("2_qnfma")]
-filepath = "res://enemies/corporate_heavy.tscn"
-distance = 250.0
-delay = 20.0
-empty_delay = 30.0
-max_enemies = 3
-max_spawns = 2
-
-[node name="ObjectSpawner4" parent="." index="3" instance=ExtResource("2_qnfma")]
-filepath = "res://classes/ring_gate.tscn"
-distance = 320.0
-delay = 65.0
-empty_delay = 50.0
-max_enemies = 2
-max_spawns = 1
-
-[node name="ObjectSpawner5" parent="." index="4" instance=ExtResource("2_qnfma")]
-filepath = "res://enemies/corporate_boss.tscn"
-distance = 350.0
-delay = 55.0
-empty_delay = 40.0
-max_enemies = 2
-max_spawns = 1
-
-[node name="CelestialBodySprite" parent="." index="7" instance=ExtResource("3_84t4j")]
+[node name="CelestialBodySprite" parent="." index="2" instance=ExtResource("3_84t4j")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1000)
 texture = ExtResource("4_a7q54")
 display_position = Vector3(0, 0, -1000)
 
-[node name="CelestialBodySprite3" parent="." index="8" instance=ExtResource("3_84t4j")]
+[node name="CelestialBodySprite3" parent="." index="3" instance=ExtResource("3_84t4j")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 500, -500, 500)
 texture = ExtResource("7_pljlx")
 display_position = Vector3(500, -500, 500)
 
-[node name="CelestialBodySprite4" parent="." index="9" instance=ExtResource("3_84t4j")]
+[node name="CelestialBodySprite4" parent="." index="4" instance=ExtResource("3_84t4j")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 100, 750, -250)
 texture = ExtResource("6_44uff")
 display_position = Vector3(100, 750, -250)
 
-[node name="Corporate Light" parent="." index="10" instance=ExtResource("5_o35yc")]
+[node name="CelestialBodySprite5" parent="." index="5" instance=ExtResource("3_84t4j")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -450, 800, 500)
+texture = ExtResource("7_5uet2")
+display_position = Vector3(-450, 800, 500)
+
+[node name="Corporate Light" parent="." index="6" instance=ExtResource("5_o35yc")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.0754, -24.1943, -308.773)
 
-[node name="Corporate Light2" parent="." index="11" instance=ExtResource("5_o35yc")]
+[node name="Corporate Light2" parent="." index="7" instance=ExtResource("5_o35yc")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -68.8521, 9.50111, -230.122)
-
-[node name="IcyAsteroid" parent="." index="12" instance=ExtResource("8_h2ltq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 150.302, -46.9334, -126.023)
-
-[node name="IcyAsteroid2" parent="." index="13" instance=ExtResource("8_h2ltq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -179.831, 33.5292, -126.4)
-
-[node name="IcyAsteroid3" parent="." index="14" instance=ExtResource("8_h2ltq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -177.787, 5.64557, -171.278)
-
-[node name="IcyAsteroid18" parent="." index="15" instance=ExtResource("8_h2ltq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -177.787, -211.434, -228.647)
-
-[node name="IcyAsteroid4" parent="." index="16" instance=ExtResource("8_h2ltq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 93.7499, -80.4866, -432.602)
-
-[node name="IcyAsteroid5" parent="." index="17" instance=ExtResource("8_h2ltq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40.4746, 111.968, -432.602)
-
-[node name="IcyAsteroid14" parent="." index="18" instance=ExtResource("8_h2ltq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40.4746, -17.5898, -752.445)
-
-[node name="IcyAsteroid15" parent="." index="19" instance=ExtResource("8_h2ltq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 162.678, -17.5898, -353.32)
-
-[node name="IcyAsteroid16" parent="." index="20" instance=ExtResource("8_h2ltq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.4116, 55.8186, -82.1794)
-
-[node name="IcyAsteroid6" parent="." index="21" instance=ExtResource("8_h2ltq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40.4746, 9.42622, 298.685)
-
-[node name="IcyAsteroid7" parent="." index="22" instance=ExtResource("8_h2ltq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 143.907, 189.283, 123.644)
-
-[node name="IcyAsteroid8" parent="." index="23" instance=ExtResource("8_h2ltq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -251.282, -65.4275, 123.644)
-
-[node name="IcyAsteroid9" parent="." index="24" instance=ExtResource("8_h2ltq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 52.7055, 269.9, -191.155)
-
-[node name="IcyAsteroid10" parent="." index="25" instance=ExtResource("8_h2ltq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40.9337, -153.973, -8.30669)
-
-[node name="IcyAsteroid11" parent="." index="26" instance=ExtResource("8_h2ltq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 298.327, 24.8564, -503.534)
-
-[node name="IcyAsteroid12" parent="." index="27" instance=ExtResource("8_h2ltq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -300.806, -98.9862, -586.234)
-
-[node name="IcyAsteroid17" parent="." index="28" instance=ExtResource("8_h2ltq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -262.13, -23.6952, -490.683)
-
-[node name="IcyAsteroid13" parent="." index="29" instance=ExtResource("8_h2ltq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 114.356, 51.8218, -586.234)

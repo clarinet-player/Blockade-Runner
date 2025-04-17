@@ -83,7 +83,7 @@ health = 4.0
 attributes = {
 "Fuel": 80.0
 }
-color_indexes = [0, 0]
+color_indexes = [2, 1]
 
 [node name="Mesh" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0.5, -0.5)

@@ -1,0 +1,13 @@
+[gd_resource type="Sky" load_steps=3 format=3 uid="uid://xfj61573c5m8"]
+
+[ext_resource type="Shader" path="res://assets/stars.gdshader" id="1_ahjnt"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_6poxx"]
+shader = ExtResource("1_ahjnt")
+shader_parameter/star_intensity = 0.06
+shader_parameter/layer_scale = 20.0
+shader_parameter/layer_scale_step = 10.0
+shader_parameter/layers_count = 4
+
+[resource]
+sky_material = SubResource("ShaderMaterial_6poxx")

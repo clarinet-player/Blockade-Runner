@@ -11,12 +11,14 @@ script/source = "extends StaticBody3D
 
 func _ready():
 	var data = GameManager.planet_data
-	if data.has(planet):
+	if data.has(planet) and GameManager.discovered_planets.has(planet):
 		for q in GameManager.quests:
 			if q.destination == planet:
 				$Sprite3D.texture = load(data[planet].target)
 				return
 		$Sprite3D.texture = load(data[planet].map)
+	else:
+		$CollisionShape3D.disabled = true
 "
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_woo1q"]

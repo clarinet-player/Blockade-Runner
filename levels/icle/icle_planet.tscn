@@ -1,31 +1,5 @@
-[gd_scene load_steps=3 format=3 uid="uid://c555a3ajxfofk"]
+[gd_scene load_steps=2 format=3 uid="uid://c555a3ajxfofk"]
 
 [ext_resource type="PackedScene" uid="uid://n1rgififa033" path="res://classes/planet_base.tscn" id="1_3ugym"]
-[ext_resource type="Texture2D" uid="uid://dnuqlmvb47e0g" path="res://levels/icle/planet2.png" id="2_f1ppa"]
 
 [node name="PlanetBase" instance=ExtResource("1_3ugym")]
-quests = Array[Dictionary]([{
-"cargo": 6,
-"destination": "Thresh",
-"parts": ["Gun Turret"]
-}, {
-"cargo": 8,
-"destination": "Nightshade",
-"parts": ["Slab Engine", "Slab Engine"]
-}, {
-"cargo": 4,
-"destination": "Brand",
-"parts": ["Cargo", "Cargo"]
-}, {
-"cargo": 6,
-"destination": "Sarnus",
-"parts": ["Wedge", "Wedge", "Wedge", "Wedge Gun"]
-}])
-
-[node name="TextureRect" type="TextureRect" parent="." index="1"]
-layout_mode = 0
-offset_left = 917.0
-offset_top = 98.0
-offset_right = 1942.0
-offset_bottom = 1123.0
-texture = ExtResource("2_f1ppa")

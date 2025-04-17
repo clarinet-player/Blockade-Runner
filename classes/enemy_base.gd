@@ -147,18 +147,20 @@ func _physics_process(delta):
 
 
 
-func damage(amount : float, part : Node3D, knockback := Vector3.ZERO, sfx := ""):
-	current_health -= max(amount, part.health)
+func damage(amount : float, part : Node3D = null, knockback := Vector3.ZERO, sfx := ""):
+	current_health -= amount
 	velocity += knockback
-	part.destroy()
 	
-	var audio = load("res://classes/audio_player.tscn").instantiate()
-	if !sfx.is_empty():
-		audio.start(self, sfx)
-	elif current_health < 0.1:
-		audio.start(self, "res://fx/destroy.mp3")
-	else:
-		audio.start(self, "res://fx/hit.mp3")
+	if part != null:
+		part.destroy()
+	
+		var audio = load("res://classes/audio_player.tscn").instantiate()
+		if !sfx.is_empty():
+			audio.start(self, sfx)
+		elif current_health < 0.1:
+			audio.start(self, "res://fx/destroy.mp3")
+		else:
+			audio.start(self, "res://fx/hit.mp3")
 	
 	if current_health < 0.1:
 		for child in get_children():
@@ -167,7 +169,14 @@ func damage(amount : float, part : Node3D, knockback := Vector3.ZERO, sfx := "")
 		destroyed = true
 		$HBoxContainer.hide()
 		$Control.hide()
-		await get_tree().create_timer(1).timeout
+		
+		#await get_tree().create_timer(0.1).timeout
+		#var drop = load("res://classes/pickup.tscn").instantiate()
+		#drop.shield = true
+		#add_sibling(drop)
+		#drop.global_position = global_position
+		
+		await get_tree().create_timer(0.5).timeout
 		queue_free()
 
 

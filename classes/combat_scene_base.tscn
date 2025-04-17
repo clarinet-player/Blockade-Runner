@@ -1,4 +1,6 @@
-[gd_scene load_steps=4 format=3 uid="uid://cwy0si0g7awhp"]
+[gd_scene load_steps=3 format=3 uid="uid://cwy0si0g7awhp"]
+
+[ext_resource type="Environment" uid="uid://bcshyljq1xfc6" path="res://assets/space_environment.tres" id="1_qiw1y"]
 
 [sub_resource type="GDScript" id="GDScript_grw7q"]
 script/source = "extends Node3D
@@ -6,36 +8,95 @@ script/source = "extends Node3D
 
 
 @export var planet : String
+@export var base_difficulty := 1.0
 
-@export var token_gen_delay := 0.4
+@export_file var light
+@export_file var medium
+@export_file var heavy
+@export_file var boss
+
+var light_spawn_time := 0
+var medium_spawn_time := 0
+var heavy_spawn_time := 0
+var boss_spawn_time := 0
+
+
+var total_difficulty := 1.0
+
+var start_time := 0
 
 var tokens := 0
 var master_tokens := 0
+var land_time := 0
 
 
 
 func _ready():
+	total_difficulty = base_difficulty + GameManager.difficulty_bonus
+	start_time = Time.get_ticks_msec()
+	light_spawn_time = Time.get_ticks_msec()
+	medium_spawn_time = Time.get_ticks_msec()
+	heavy_spawn_time = Time.get_ticks_msec()
+	boss_spawn_time = Time.get_ticks_msec()
+	
 	while true:
 		if tokens < 2:
 			tokens += 1
 		if master_tokens < 2:
 			master_tokens += 1
-		await get_tree().create_timer(token_gen_delay).timeout
+		await get_tree().create_timer(1.0 / total_difficulty).timeout
+
+
+
+func _physics_process(delta):
+	
+	if $Label.visible:
+		if land_time - Time.get_ticks_msec() < 1:
+			GameManager.start_planet(planet)
+			GameManager.difficulty_bonus += 0.25
+		elif land_time - Time.get_ticks_msec() < 1000:
+			$Label.text = \"Landing in \" + str(snapped((land_time - Time.get_ticks_msec()) / 1000.0, 0.1))
+		else:
+			$Label.text = \"Landing in \" + str(str(snapped((land_time - Time.get_ticks_msec()) / 1000.0, 1)))
+		return
+	
+	elif (Time.get_ticks_msec() - start_time) / 1000 > 30 + total_difficulty * 10:
+		if get_tree().get_nodes_in_group(\"Enemies\").size() == 0:
+			$Label.show()
+			land_time = Time.get_ticks_msec() + 3000
+		return
+	
+	if boss != null and get_tree().get_nodes_in_group(\"Enemies\").size() < total_difficulty and Time.get_ticks_msec() - boss_spawn_time > (60 - total_difficulty) * 1000:
+		boss_spawn_time = Time.get_ticks_msec()
+		var new = load(boss).instantiate()
+		add_child(new)
+		new.global_position = Ship.global_position + Vector3(randi_range(-300, 300), randi_range(-300, 300), randf_range(-300, -300 * 2)).limit_length(300)
+	
+	if heavy != null and get_tree().get_nodes_in_group(\"Enemies\").size() < total_difficulty and Time.get_ticks_msec() - heavy_spawn_time > (40 - total_difficulty) * 1000:
+		heavy_spawn_time = Time.get_ticks_msec()
+		var new = load(heavy).instantiate()
+		add_child(new)
+		new.global_position = Ship.global_position + Vector3(randi_range(-300, 300), randi_range(-300, 300), randf_range(-300, -300 * 2)).limit_length(300)
+	
+	if medium != null and get_tree().get_nodes_in_group(\"Enemies\").size() < total_difficulty and Time.get_ticks_msec() - medium_spawn_time > (20 - total_difficulty) * 1000:
+		medium_spawn_time = Time.get_ticks_msec()
+		var new = load(medium).instantiate()
+		add_child(new)
+		new.global_position = Ship.global_position + Vector3(randi_range(-300, 300), randi_range(-300, 300), randf_range(-300, -300 * 2)).limit_length(300)
+	
+	if light != null and get_tree().get_nodes_in_group(\"Enemies\").size() < total_difficulty and Time.get_ticks_msec() - light_spawn_time > (10 - total_difficulty) * 1000:
+		light_spawn_time = Time.get_ticks_msec()
+		var new = load(light).instantiate()
+		add_child(new)
+		new.global_position = Ship.global_position + Vector3(randi_range(-300, 300), randi_range(-300, 300), randf_range(-300, -300 * 2)).limit_length(300)
+
 "
-
-[sub_resource type="Sky" id="Sky_b81m3"]
-
-[sub_resource type="Environment" id="Environment_f1uxp"]
-background_mode = 1
-sky = SubResource("Sky_b81m3")
-ambient_light_source = 2
-ambient_light_color = Color(0.0980392, 0.0980392, 0.121569, 1)
 
 [node name="CombatSceneBase" type="Node3D"]
 script = SubResource("GDScript_grw7q")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment_f1uxp")
+environment = ExtResource("1_qiw1y")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(-0.911014, -0.0771264, -0.405098, -0.301809, -0.544706, 0.782436, -0.281006, 0.835073, 0.472958, 0, 3, 0)
@@ -43,3 +104,18 @@ light_color = Color(1, 1, 0.980392, 1)
 light_energy = 0.75
 light_angular_distance = 0.5
 shadow_enabled = true
+
+[node name="Label" type="Label" parent="."]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -47.0
+offset_top = 37.0
+offset_right = 47.0
+offset_bottom = 60.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "Landing in 3"

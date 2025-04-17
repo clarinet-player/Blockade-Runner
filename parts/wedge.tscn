@@ -43,7 +43,6 @@ script = ExtResource("1_wk22s")
 type = "Wedge"
 mass = 0.5
 health = 0.25
-num_materials = 1
 
 [node name="Mesh" type="MeshInstance3D" parent="."]
 mesh = SubResource("ArrayMesh_6lmrl")

@@ -1,0 +1,82 @@
+[gd_scene load_steps=5 format=3 uid="uid://5b47t54jmhc"]
+
+[ext_resource type="Theme" uid="uid://co8tjlbj1cjyd" path="res://assets/theme.tres" id="1_ftx6e"]
+[ext_resource type="Theme" uid="uid://6ftdqmtb2drx" path="res://assets/theme2.tres" id="2_2k0xq"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_76yds"]
+bg_color = Color(0.117647, 0.117647, 0.117647, 1)
+border_width_left = 10
+border_width_top = 10
+border_width_right = 10
+border_width_bottom = 10
+border_color = Color(0.117647, 0.117647, 0.117647, 1)
+
+[sub_resource type="GDScript" id="GDScript_bh3qh"]
+script/source = "extends PanelContainer
+
+
+var quest : Dictionary
+signal accepted(q : Dictionary)
+
+
+func set_quest(q : Dictionary):
+	quest = q
+	$VBoxContainer/Label2.text = \"Deliver \" + str(quest.cargo) + \" cargo to \" + quest.destination
+	$VBoxContainer/Label3.text = \"Reward: \" + str(quest.credits) + \" credits\" + (\"\" if quest.parts.is_empty() else \", \" + str(quest.parts))
+	if quest.cargo > Ship.cargo_capacity + 0.1:
+		$VBoxContainer/Label4.show()
+		$VBoxContainer/Button.hide()
+
+
+func recalculate():
+	if quest.cargo > Ship.cargo_capacity + 0.1:
+		$VBoxContainer/Label4.show()
+		$VBoxContainer/Button.hide()
+	else:
+		$VBoxContainer/Label4.hide()
+		$VBoxContainer/Button.show()
+
+
+func button_down():
+	hide()
+	accepted.emit(quest)
+"
+
+[node name="PanelContainer" type="PanelContainer"]
+theme_override_styles/panel = SubResource("StyleBoxFlat_76yds")
+script = SubResource("GDScript_bh3qh")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+alignment = 1
+
+[node name="Label" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme = ExtResource("1_ftx6e")
+text = "Quest"
+horizontal_alignment = 1
+
+[node name="Label2" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme = ExtResource("2_2k0xq")
+text = "Deliver 4 cargo to Brand"
+
+[node name="Label3" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme = ExtResource("2_2k0xq")
+text = "Reward: Engine x2"
+
+[node name="Label4" type="Label" parent="VBoxContainer"]
+visible = false
+layout_mode = 2
+theme = ExtResource("2_2k0xq")
+theme_override_colors/font_color = Color(1, 0, 0, 1)
+text = "Out of cargo space!"
+
+[node name="Button" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+theme = ExtResource("2_2k0xq")
+theme_override_styles/normal = SubResource("StyleBoxFlat_76yds")
+text = "Accept"
+
+[connection signal="button_down" from="VBoxContainer/Button" to="." method="button_down"]

@@ -117,7 +117,7 @@ health = 1.0
 attributes = {
 "Attack Speed": 8.0
 }
-color_indexes = [0, 0, 0]
+color_indexes = [0, 1, 1]
 
 [node name="Mesh" type="MeshInstance3D" parent="."]
 transform = Transform3D(-1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, 0, 0, 0)

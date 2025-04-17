@@ -12,9 +12,9 @@ script/source = "extends Node
 enum states {
 	menu,
 	combat,
-	paused,
 	editor,
-	planet
+	planet,
+	map
 }
 var game_state := states.menu
 
@@ -23,15 +23,21 @@ var game_state := states.menu
 var file_number := -1
 var location := \"\"
 var planet_seed := 0
+var difficulty_bonus := 0.0
 var autosaved_ship := {}
 var quests := []
 var parts := {}
+var credits := 0
+var discovered_planets := []
+var completed_quests := []
+
+var collected_pickups := {}
 
 var ships
 var planet_data
 var part_data
 
- 
+
 
 func start_combat(level := \"\"):
 	if level.is_empty():
@@ -45,52 +51,24 @@ func start_combat(level := \"\"):
 
 
 
-func start_planet(save := true, planet := \"\", new_seed := false, load_ship := false):
-	if new_seed:
+func start_planet(planet := \"\"):
+	if game_state == states.combat:
 		planet_seed = randi()
 	
 	if !planet.is_empty():
 		location = planet
+	
 	get_tree().change_scene_to_file(planet_data[location].planet)
 	
-	game_state = states.planet
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	for child in get_children():
 		child.queue_free()
-	
-	var completed = []
-	for quest in quests:
-		if quest.destination == location:
-			completed.append(quest)
-	for quest in completed:
-		for part in quest.parts:
-			if parts.has(part):
-				parts[part] += 1
-			else:
-				parts[part] = 1
-		quests.erase(quest)
-	
-	if load_ship:
-		Ship.load_data(autosaved_ship, \"Untitled Ship\")
-	Ship.calculate_stats()
-	
-	if save:
-		save_game()
-
-
-
-func start_editor():
-	get_tree().change_scene_to_file(\"res://menus/ship_editor.tscn\")
-	game_state = states.editor
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	Ship.reset()
 
 
 
 func start_map():
 	get_tree().change_scene_to_file(\"res://menus/map.tscn\")
 	
-	game_state = states.planet
+	game_state = states.map
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	for child in get_children():
 		child.queue_free()
@@ -100,18 +78,22 @@ func start_map():
 func new_game():
 	file_number = -1
 	location = \"Eden\"
+	difficulty_bonus = 0
 	autosaved_ship = read_file(\"res://assets/default_ship.json\")
 	quests = []
 	parts = {\"Block\": 6, \"Slab Engine\": 4, \"Fuel Tank\": 2, \"Cargo\": 4, \"Engine\": 4, \"Gun\": 2}
+	credits = 10
+	discovered_planets = [\"Eden\"]
+	completed_quests = []
 	
 	ships = read_file(\"user://ship_saves.json\")
 	if ships == null:
-		ships = Array()
+		ships = {}
 	
 	planet_data = GameManager.read_file(\"res://levels/planet_data.json\")
 	part_data = GameManager.read_file(\"res://parts/part_data.json\")
 	
-	Ship.load_data(autosaved_ship, \"Untitled Ship\")
+	Ship.load_data(autosaved_ship, \"Default Ship\")
 	start_combat()
 	$\"tutorial prompts\".start()
 
@@ -124,7 +106,8 @@ func load_game(file : int):
 	var data : Dictionary = read_file(\"user://game_data.json\")[file]
 	ships = read_file(\"user://ship_saves.json\")
 	if ships == null:
-		ships = Array()
+		ships = {}
+	game_state = states.planet
 	
 	planet_data = GameManager.read_file(\"res://levels/planet_data.json\")
 	part_data = GameManager.read_file(\"res://parts/part_data.json\")
@@ -133,6 +116,9 @@ func load_game(file : int):
 	
 	if data.has(\"Location\"): location = data[\"Location\"]
 	else: location = \"Eden\"
+	
+	if data.has(\"Difficulty Bonus\"): difficulty_bonus = data[\"Difficulty Bonus\"]
+	else: difficulty_bonus = 0
 	
 	if data.has(\"Autosaved Ship\"): autosaved_ship = data[\"Autosaved Ship\"]
 	else: autosaved_ship = read_file(\"res://assets/default_ship.json\")
@@ -143,8 +129,16 @@ func load_game(file : int):
 	if data.has(\"Parts\"): parts = data[\"Parts\"]
 	else: parts = {}
 	
-	Ship.load_data(autosaved_ship, \"Untitled Ship\")
-	start_planet(false)
+	if data.has(\"Credits\"): credits = data[\"Credits\"]
+	else: credits = 10
+	
+	if data.has(\"Discovered Planets\"): discovered_planets = data[\"Discovered Planets\"]
+	else: discovered_planets = []
+	
+	if data.has(\"Completed Quests\"): completed_quests = data[\"Completed Quests\"]
+	
+	Ship.load_data(autosaved_ship, \"Autosaved Ship\")
+	start_planet()
 
 
 
@@ -156,16 +150,24 @@ func save_game():
 		file_number = data.size()
 		data.append({
 		\"Location\": location,
+		\"Difficulty Bonus\": difficulty_bonus,
 		\"Autosaved Ship\": autosaved_ship,
 		\"Quests\": quests,
-		\"Parts\": parts
+		\"Parts\": parts,
+		\"Credits\": credits,
+		\"Discovered Planets\": discovered_planets,
+		\"Completed Quests\": completed_quests
 		})
 	else:
 		data[file_number] = {
 			\"Location\": location,
+			\"Difficulty Bonus\": difficulty_bonus,
 			\"Autosaved Ship\": autosaved_ship,
 			\"Quests\": quests,
-			\"Parts\": parts
+			\"Parts\": parts,
+			\"Credits\": credits,
+			\"Discovered Planets\": discovered_planets,
+			\"Completed Quests\": completed_quests
 		}
 	write_file(\"user://game_data.json\", data)
 
@@ -293,3 +295,12 @@ size_flags_horizontal = 4
 size_flags_vertical = 4
 texture = ExtResource("3_hghau")
 expand_mode = 1
+
+[node name="ColorRect" type="ColorRect" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0)

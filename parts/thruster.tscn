@@ -112,7 +112,7 @@ script = SubResource("GDScript_pvdc7")
 type = "Thruster"
 mass = 0.75
 health = 0.3
-color_indexes = [0, 1]
+color_indexes = [0, 0]
 
 [node name="Cube_020" type="MeshInstance3D" parent="."]
 mesh = SubResource("ArrayMesh_4sthi")

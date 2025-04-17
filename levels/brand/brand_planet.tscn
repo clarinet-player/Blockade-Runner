@@ -1,27 +1,15 @@
-[gd_scene load_steps=3 format=3 uid="uid://biu1dfpwhqvgh"]
+[gd_scene load_steps=2 format=3 uid="uid://biu1dfpwhqvgh"]
 
-[ext_resource type="Texture2D" uid="uid://85idgrqng72h" path="res://levels/brand/brand.png" id="1_ecgfv"]
 [ext_resource type="PackedScene" uid="uid://n1rgififa033" path="res://classes/planet_base.tscn" id="1_vobgm"]
 
 [node name="PlanetBase" instance=ExtResource("1_vobgm")]
-quests = Array[Dictionary]([{
+unique_quest = {
 "cargo": 4,
-"destination": "Tarsis",
-"parts": ["Fuel Tank"]
-}, {
-"cargo": 6,
-"destination": "Icle",
-"parts": ["Rocket Launcher"]
-}, {
-"cargo": 4,
+"credits": 10,
 "destination": "Sarnus",
-"parts": ["Cargo", "Cargo"]
-}])
-num_quests = 2
+"parts": ["Rocket Launcher"],
+"unique": "Brand"
+}
 
-[node name="TextureRect" type="TextureRect" parent="." index="1"]
-layout_mode = 0
-offset_left = 907.0
-offset_right = 1987.0
-offset_bottom = 1080.0
-texture = ExtResource("1_ecgfv")
+[node name="Parallax" parent="." index="8"]
+transform = Transform3D(-0.181173, 0, -0.676148, 0, 0.7, 0, 0.676148, 0, -0.181173, 0, 0.5, 0)

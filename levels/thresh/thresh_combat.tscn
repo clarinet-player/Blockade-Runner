@@ -1,64 +1,43 @@
-[gd_scene load_steps=7 format=3 uid="uid://ddubhhruudl1j"]
+[gd_scene load_steps=8 format=3 uid="uid://ddubhhruudl1j"]
 
 [ext_resource type="PackedScene" uid="uid://cwy0si0g7awhp" path="res://classes/combat_scene_base.tscn" id="1_sq2qa"]
-[ext_resource type="PackedScene" uid="uid://b3x1gq71qfqfj" path="res://classes/object_spawner.tscn" id="2_yubo1"]
 [ext_resource type="PackedScene" uid="uid://dwqr8jq0alrsi" path="res://classes/celestial_body_sprite.tscn" id="3_maq3d"]
 [ext_resource type="Texture2D" uid="uid://ds2wul7utl7ri" path="res://levels/thresh/thresh.png" id="4_baa7b"]
 [ext_resource type="PackedScene" uid="uid://bloxjlktf8ner" path="res://enemies/gunner.tscn" id="6_ooc51"]
+[ext_resource type="Texture2D" uid="uid://c17i386v8fyhp" path="res://assets/red_giant.png" id="6_qqrjo"]
+[ext_resource type="Texture2D" uid="uid://cyidkimhqrmiy" path="res://assets/red_dwarf.png" id="7_b5nxg"]
 [ext_resource type="Texture2D" uid="uid://dgeqse8nwjo1a" path="res://assets/black_hole.png" id="10_oj3ew"]
 
 [node name="CombatSceneBase" instance=ExtResource("1_sq2qa")]
 planet = "Thresh"
-token_gen_delay = 0.375
+base_difficulty = 2.0
+light = "res://enemies/corporate_light.tscn"
+medium = "res://enemies/impaler.tscn"
+heavy = "res://enemies/gunner.tscn"
 
-[node name="ObjectSpawner" parent="." index="0" instance=ExtResource("2_yubo1")]
-filepath = "res://enemies/impaler.tscn"
-distance = 300.0
-delay = 12.0
-max_wave_size = 2
-max_spawns = 16
+[node name="DirectionalLight3D" parent="." index="1"]
+light_color = Color(1, 0.745098, 0.705882, 1)
+light_energy = 0.8
 
-[node name="ObjectSpawner2" parent="." index="1" instance=ExtResource("2_yubo1")]
-filepath = "res://enemies/corporate_medium.tscn"
-distance = 320.0
-delay = 20.0
-empty_delay = 18.0
-max_enemies = 3
-max_spawns = 8
-
-[node name="ObjectSpawner3" parent="." index="2" instance=ExtResource("2_yubo1")]
-filepath = "res://enemies/gunner.tscn"
-distance = 280.0
-delay = 16.0
-empty_delay = 16.0
-max_enemies = 3
-max_spawns = 6
-
-[node name="ObjectSpawner4" parent="." index="3" instance=ExtResource("2_yubo1")]
-filepath = "res://classes/ring_gate.tscn"
-distance = 320.0
-delay = 60.0
-empty_delay = 50.0
-max_enemies = 2
-max_spawns = 1
-
-[node name="ObjectSpawner5" parent="." index="4" instance=ExtResource("2_yubo1")]
-filepath = "res://levels/thresh/debris.tscn"
-distance = 400.0
-empty_delay = 10.0
-max_enemies = 10
-max_wave_size = 4
-max_spawns = 1000
-
-[node name="CelestialBodySprite" parent="." index="7" instance=ExtResource("3_maq3d")]
+[node name="CelestialBodySprite" parent="." index="2" instance=ExtResource("3_maq3d")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1000)
 texture = ExtResource("4_baa7b")
 display_position = Vector3(0, 0, -1000)
 
-[node name="CelestialBodySprite3" parent="." index="8" instance=ExtResource("3_maq3d")]
+[node name="CelestialBodySprite3" parent="." index="3" instance=ExtResource("3_maq3d")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 500, -500, 500)
 texture = ExtResource("10_oj3ew")
 display_position = Vector3(500, -500, 500)
 
-[node name="Gunner" parent="." index="9" instance=ExtResource("6_ooc51")]
+[node name="CelestialBodySprite4" parent="." index="4" instance=ExtResource("3_maq3d")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -300, 650, 650)
+texture = ExtResource("6_qqrjo")
+display_position = Vector3(-300, 650, 650)
+
+[node name="CelestialBodySprite5" parent="." index="5" instance=ExtResource("3_maq3d")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -425, 800, 350)
+texture = ExtResource("7_b5nxg")
+display_position = Vector3(-425, 800, 350)
+
+[node name="Gunner" parent="." index="6" instance=ExtResource("6_ooc51")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 31, 0, -308)

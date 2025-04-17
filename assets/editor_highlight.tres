@@ -1,0 +1,9 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://bxltt7jdfxvtx"]
+
+[ext_resource type="Shader" path="res://assets/highlight.gdshader" id="1_glxrf"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_glxrf")
+shader_parameter/outline_color = Color(1, 1, 1, 1)
+shader_parameter/alpha = 0.25

@@ -26,7 +26,7 @@ func _process(delta):
 	
 	targets = []
 	for enemy in get_tree().get_nodes_in_group(\"Enemies\"):
-		if targets.size() < 4 and !enemy.destroyed and acos(Ship.global_basis.z.dot(Ship.global_position.direction_to(enemy.global_position))) > 2.5 and Ship.global_position.distance_to(enemy.global_position) > 50 and Ship.global_position.distance_to(enemy.global_position) < 400:
+		if targets.size() < 4 and !enemy.destroyed and acos(Ship.camera.global_basis.z.dot(Ship.global_position.direction_to(enemy.global_position))) > 2.4 and Ship.global_position.distance_to(enemy.global_position) > 50 and Ship.global_position.distance_to(enemy.global_position) < 400:
 			targets.append(enemy)
 	
 	

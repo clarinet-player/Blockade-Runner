@@ -45,7 +45,7 @@ health = 0.5
 attributes = {
 "Cargo": 1.0
 }
-color_indexes = [2]
+color_indexes = Array[int]([2])
 
 [node name="Mesh" type="MeshInstance3D" parent="."]
 mesh = SubResource("ArrayMesh_mnl0u")

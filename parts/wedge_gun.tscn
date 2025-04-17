@@ -82,7 +82,7 @@ health = 0.25
 attributes = {
 "Attack Speed": 1.0
 }
-color_indexes = [0, 0]
+color_indexes = [0, 1]
 
 [node name="Mesh" type="MeshInstance3D" parent="."]
 mesh = SubResource("ArrayMesh_wnatv")

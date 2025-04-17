@@ -1,0 +1,9 @@
+[gd_resource type="Environment" load_steps=2 format=3 uid="uid://bcshyljq1xfc6"]
+
+[ext_resource type="Sky" uid="uid://xfj61573c5m8" path="res://assets/stars.tres" id="1_x8vo0"]
+
+[resource]
+background_mode = 2
+sky = ExtResource("1_x8vo0")
+ambient_light_source = 2
+ambient_light_color = Color(0.0784314, 0.0784314, 0.0980392, 1)

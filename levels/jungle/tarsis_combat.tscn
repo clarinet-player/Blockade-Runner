@@ -1,48 +1,35 @@
 [gd_scene load_steps=7 format=3 uid="uid://dnskouvkfd3it"]
 
 [ext_resource type="PackedScene" uid="uid://cwy0si0g7awhp" path="res://classes/combat_scene_base.tscn" id="1_54rad"]
-[ext_resource type="PackedScene" uid="uid://b3x1gq71qfqfj" path="res://classes/object_spawner.tscn" id="2_yq7sw"]
 [ext_resource type="PackedScene" uid="uid://dwqr8jq0alrsi" path="res://classes/celestial_body_sprite.tscn" id="3_fnej0"]
 [ext_resource type="Texture2D" uid="uid://c1hkvllc4bjtl" path="res://levels/jungle/jungle.png" id="4_t30aa"]
+[ext_resource type="Texture2D" uid="uid://2yj3dndxvp2f" path="res://assets/blue_star.png" id="6_0fhlu"]
 [ext_resource type="Texture2D" uid="uid://dgeqse8nwjo1a" path="res://assets/black_hole.png" id="9_64h6g"]
 [ext_resource type="PackedScene" uid="uid://dom60hk30esk3" path="res://enemies/corporate_light.tscn" id="9_133eb"]
 
 [node name="CombatSceneBase" instance=ExtResource("1_54rad")]
 planet = "Tarsis"
-token_gen_delay = 0.55
+base_difficulty = 1.75
+light = "res://enemies/corporate_light.tscn"
+medium = "res://enemies/corporate_medium.tscn"
 
-[node name="ObjectSpawner" parent="." index="0" instance=ExtResource("2_yq7sw")]
-filepath = "res://enemies/corporate_light.tscn"
-distance = 250.0
-delay = 14.5
-empty_delay = 5.0
-max_spawns = 6
+[node name="DirectionalLight3D" parent="." index="1"]
+light_color = Color(0.745098, 0.784314, 0.980392, 1)
 
-[node name="ObjectSpawner2" parent="." index="1" instance=ExtResource("2_yq7sw")]
-filepath = "res://enemies/corporate_medium.tscn"
-distance = 320.0
-delay = 40.0
-empty_delay = 35.0
-max_enemies = 3
-max_spawns = 1
-
-[node name="ObjectSpawner3" parent="." index="2" instance=ExtResource("2_yq7sw")]
-filepath = "res://classes/ring_gate.tscn"
-distance = 320.0
-delay = 65.0
-empty_delay = 48.0
-max_enemies = 2
-max_spawns = 1
-
-[node name="CelestialBodySprite" parent="." index="5" instance=ExtResource("3_fnej0")]
+[node name="CelestialBodySprite" parent="." index="2" instance=ExtResource("3_fnej0")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1000)
 texture = ExtResource("4_t30aa")
 display_position = Vector3(0, 0, -1000)
 
-[node name="Corporate Light" parent="." index="6" instance=ExtResource("9_133eb")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.1858, 13.2803, -250)
-
-[node name="CelestialBodySprite3" parent="." index="7" instance=ExtResource("3_fnej0")]
+[node name="CelestialBodySprite3" parent="." index="3" instance=ExtResource("3_fnej0")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 500, -500, 500)
 texture = ExtResource("9_64h6g")
 display_position = Vector3(500, -500, 500)
+
+[node name="CelestialBodySprite4" parent="." index="4" instance=ExtResource("3_fnej0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -450, 800, 500)
+texture = ExtResource("6_0fhlu")
+display_position = Vector3(-450, 800, 500)
+
+[node name="Corporate Light" parent="." index="5" instance=ExtResource("9_133eb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.1858, 13.2803, -250)

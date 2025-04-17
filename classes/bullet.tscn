@@ -19,7 +19,7 @@ var emitted_sound := false
 
 
 func _ready():
-	look_at(global_position + velocity)
+	look_at(global_position + velocity - Ship.velocity)
 	spawn_time = Time.get_ticks_msec()
 	$MeshInstance3D.mesh.height = min(velocity.length() / 30, 10)
 
@@ -43,7 +43,7 @@ func _physics_process(delta):
 		queue_free()
 		return
 	
-	if !player and !emitted_sound and global_position.distance_to(Ship.global_position) < 16 and acos(velocity.normalized().dot(global_position.direction_to(Ship.global_position))) > 1.0:
+	if !player and !emitted_sound and global_position.distance_to(Ship.global_position) < 12 and acos(velocity.normalized().dot(global_position.direction_to(Ship.global_position))) > 1.1:
 		emitted_sound = true
 		var audio = load(\"res://classes/audio_player.tscn\").instantiate()
 		audio.start(self, \"res://fx/miss.mp3\")
