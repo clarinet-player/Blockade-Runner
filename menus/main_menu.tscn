@@ -1,5 +1,6 @@
-[gd_scene load_steps=5 format=3 uid="uid://b8ht1dacwtip"]
+[gd_scene load_steps=6 format=3 uid="uid://b8ht1dacwtip"]
 
+[ext_resource type="Theme" uid="uid://bu38ut87r4sud" path="res://assets/master_theme.tres" id="1_m0g2u"]
 [ext_resource type="Theme" uid="uid://co8tjlbj1cjyd" path="res://assets/theme.tres" id="1_yq87v"]
 [ext_resource type="Sky" uid="uid://xfj61573c5m8" path="res://assets/stars.tres" id="2_bjt0j"]
 
@@ -16,12 +17,13 @@ func _ready():
 		GameManager.write_file(\"user://game_data.json\", [])
 	for save in GameManager.read_file(\"user://game_data.json\"):
 		var button = Button.new()
-		$loadmenu/VBoxContainer.add_child(button)
-		button.theme = load(\"res://assets/theme.tres\")
+		$loadmenu/ScrollContainer/VBoxContainer.add_child(button)
+		button.theme = load(\"res://assets/master_theme.tres\")
 		button.text = \"File \" + var_to_str(file_num) + \" - \" + save[\"Location\"]
 		button.button_down.connect(load_game.bind(file_num - 1))
 	
 		file_num += 1
+
 
 
 func _on_load_button_down():
@@ -49,6 +51,7 @@ func load_game(num : int):
 [sub_resource type="Environment" id="Environment_tqxoh"]
 background_mode = 2
 sky = ExtResource("2_bjt0j")
+sky_custom_fov = 70.0
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -60,7 +63,6 @@ grow_vertical = 2
 script = SubResource("GDScript_g62eo")
 
 [node name="menu" type="VBoxContainer" parent="."]
-visible = false
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -73,26 +75,28 @@ offset_right = 344.5
 offset_bottom = 162.5
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/separation = 10
 
 [node name="load" type="Button" parent="menu"]
 layout_mode = 2
-theme = ExtResource("1_yq87v")
+theme = ExtResource("1_m0g2u")
 theme_override_font_sizes/font_size = 80
 text = "Load Save
 "
 
 [node name="new" type="Button" parent="menu"]
 layout_mode = 2
-theme = ExtResource("1_yq87v")
+theme = ExtResource("1_m0g2u")
 text = "New Game
 "
 
 [node name="quit" type="Button" parent="menu"]
 layout_mode = 2
-theme = ExtResource("1_yq87v")
+theme = ExtResource("1_m0g2u")
 text = "Quit"
 
 [node name="loadmenu" type="Control" parent="."]
+visible = false
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -106,19 +110,25 @@ offset_bottom = 20.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="loadmenu"]
+[node name="ScrollContainer" type="ScrollContainer" parent="loadmenu"]
+custom_minimum_size = Vector2(600, 700)
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -344.5
-offset_top = -162.5
-offset_right = 344.5
-offset_bottom = 162.5
+offset_left = -254.0
+offset_top = -20.0
+offset_right = 254.0
+offset_bottom = 20.0
 grow_horizontal = 2
 grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="loadmenu/ScrollContainer"]
+clip_children = 2
+layout_mode = 2
 alignment = 1
 
 [node name="back" type="Button" parent="loadmenu"]
@@ -134,7 +144,7 @@ offset_right = 247.0
 offset_bottom = 473.0
 grow_horizontal = 2
 grow_vertical = 0
-theme = ExtResource("1_yq87v")
+theme = ExtResource("1_m0g2u")
 text = "Back"
 
 [node name="Label" type="Label" parent="loadmenu"]

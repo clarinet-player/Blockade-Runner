@@ -3,3 +3,9 @@
 [ext_resource type="PackedScene" uid="uid://n1rgififa033" path="res://classes/planet_base.tscn" id="1_5lshe"]
 
 [node name="PlanetBase" instance=ExtResource("1_5lshe")]
+unique_quest = {
+"cargo": 4,
+"credits": 15,
+"destination": "Icle",
+"parts": ["Shield Generator"]
+}

@@ -1,15 +1,24 @@
-[gd_scene load_steps=29 format=3 uid="uid://n1rgififa033"]
+[gd_scene load_steps=27 format=3 uid="uid://n1rgififa033"]
 
 [ext_resource type="Theme" uid="uid://co8tjlbj1cjyd" path="res://assets/theme.tres" id="1_bam06"]
 [ext_resource type="Environment" uid="uid://fdj5ff47pt2e" path="res://assets/planet_environment.tres" id="1_gud6v"]
 [ext_resource type="Theme" uid="uid://6ftdqmtb2drx" path="res://assets/theme2.tres" id="2_roblw"]
+[ext_resource type="Theme" uid="uid://bu38ut87r4sud" path="res://assets/master_theme.tres" id="2_x2wxk"]
 [ext_resource type="Texture2D" uid="uid://b0rtjk2fen7gq" path="res://assets/metal2.png" id="3_w3s3w"]
 [ext_resource type="Texture2D" uid="uid://ecx4yi0jejil" path="res://assets/wasdqe.png" id="4_iu17h"]
-[ext_resource type="Texture2D" uid="uid://e30xjmmvkxdi" path="res://assets/switch_environment.png" id="5_nhxou"]
 
 [sub_resource type="GDScript" id="GDScript_ucp4p"]
 script/source = "extends Node3D
 
+
+
+enum s {
+	rewards,
+	menu,
+	shop,
+	editor
+}
+var state := s.menu
 
 
 @export var unique_quest : Dictionary
@@ -39,18 +48,28 @@ func _ready():
 	while $HBoxContainer.get_children().size() < num_quests + 1:
 		var quest = {}
 		var difficulty = int(randf_range(2, 4) + GameManager.difficulty_bonus)
-		quest.destination = GameManager.planet_data.keys()[GameManager.planet_data.keys().find(GameManager.location) + (randi_range(-1, -2) if randf() < 0.5 and GameManager.planet_data.keys().find(GameManager.location) > 1 else randi_range(1, 2))]
+		quest.destination = GameManager.planet_data.keys()[min(GameManager.planet_data.keys().find(GameManager.location) + (randi_range(-1, -2) if randf() < 0.5 and GameManager.planet_data.keys().find(GameManager.location) > 1 else randi_range(1, 2)), GameManager.planet_data.size() - 1)]
 		quest.cargo = difficulty
 		quest.parts = []
-		quest.credits = difficulty * 5
+		quest.credits = difficulty * 4
 		
 		var panel = load(\"res://menus/quest_panel.tscn\").instantiate()
 		$HBoxContainer.add_child(panel)
 		panel.set_quest(quest)
 		panel.accepted.connect(add_quest)
 	
+	var parts = []
+	while parts.size() < 8:
+		for part in GameManager.part_data.keys():
+			if !parts.has(part) and randi_range(0, 9) > GameManager.part_data[part].rarity:
+				parts.append(part)
+				var panel = load(\"res://menus/part_panel.tscn\").instantiate()
+				panel.part = part
+				panel.price = GameManager.part_data[part].value + randi_range(-5, 5)
+				$VBoxContainer.add_child(panel)
+	$VBoxContainer.move_child($VBoxContainer/Button, -1)
+	
 	GameManager.game_state = GameManager.states.planet
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	
 	$camera/Camera3D.current = true
 	GameManager.save_game()
@@ -65,10 +84,7 @@ func play_landing_anim():
 
 
 func calculate_rewards():
-	$HBoxContainer.hide()
-	$PanelContainer.show()
-	$VBoxContainer.hide()
-	$Control.hide()
+	state = s.rewards
 	
 	var completed = []
 	var parts = []
@@ -95,7 +111,7 @@ func calculate_rewards():
 	$PanelContainer/VBoxContainer/Label2.text = \"From Quests: \" + str(credits) + \" Credits\" + (\", \" + str(parts) if !parts.is_empty() else \"\")
 	if GameManager.collected_pickups.size() > 0:
 		$PanelContainer/VBoxContainer/Label3.show()
-		$PanelContainer/VBoxContainer/Label3.text = \"From Pickups: \" + str(GameManager.collected_pickups)
+		$PanelContainer/VBoxContainer/Label3.text = \"From Drops: \" + str(GameManager.collected_pickups)
 		GameManager.collected_pickups.clear()
 	else:
 		$PanelContainer/VBoxContainer/Label3.hide()
@@ -103,10 +119,7 @@ func calculate_rewards():
 
 
 func start_menu():
-	$HBoxContainer.show()
-	$PanelContainer.hide()
-	$VBoxContainer.hide()
-	$Control.hide()
+	state = s.menu
 	
 	$HBoxContainer/PanelContainer.visible = has_shop
 	$HBoxContainer/PanelContainer/VBoxContainer/Label2.text = str(GameManager.credits) + \" Credits\"
@@ -117,18 +130,13 @@ func start_menu():
 
 
 func start_shop():
-	$HBoxContainer.hide()
-	$PanelContainer.hide()
-	$VBoxContainer.show()
-	$Control.hide()
+	state = s.shop
+	$VBoxContainer.reload()
 
 
 
 func start_editor():
-	$HBoxContainer.hide()
-	$PanelContainer.hide()
-	$VBoxContainer.hide()
-	$Control.show()
+	state = s.editor
 	$Control.reload()
 
 
@@ -148,6 +156,19 @@ func add_quest(quest):
 
 
 func _process(delta):
+	$HBoxContainer.hide()
+	$PanelContainer.hide()
+	$VBoxContainer.hide()
+	$Control.hide()
+	if !GameManager.paused and state == s.rewards:
+		$PanelContainer.show()
+	elif !GameManager.paused and state == s.menu:
+		$HBoxContainer.show()
+	elif !GameManager.paused and state == s.shop:
+		$VBoxContainer.show()
+	elif !GameManager.paused and state == s.editor:
+		$Control.show()
+	
 	$Circle.global_position = Vector3(0, -1.5 - Ship.size.y, 0)
 	if landing:
 		Ship.global_position = Ship.global_position.lerp(Vector3(0, Ship.global_position.length() * 0.25, -0.25), delta)
@@ -156,29 +177,13 @@ func _process(delta):
 			landing = false
 "
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_76yds"]
-bg_color = Color(0.117647, 0.117647, 0.117647, 1)
-border_width_left = 10
-border_width_top = 10
-border_width_right = 10
-border_width_bottom = 10
-border_color = Color(0.117647, 0.117647, 0.117647, 1)
+[sub_resource type="GDScript" id="GDScript_5miol"]
+script/source = "extends VBoxContainer
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hij73"]
-bg_color = Color(0.117647, 0.117647, 0.117647, 1)
-border_width_left = 10
-border_width_top = 10
-border_width_right = 10
-border_width_bottom = 10
-border_color = Color(0.117647, 0.117647, 0.117647, 1)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_vvewj"]
-bg_color = Color(0.117647, 0.117647, 0.117647, 1)
-border_width_left = 10
-border_width_top = 10
-border_width_right = 10
-border_width_bottom = 10
-border_color = Color(0.117647, 0.117647, 0.117647, 1)
+func reload():
+		$Label.text = str(GameManager.credits) + \" Credits\"
+"
 
 [sub_resource type="GDScript" id="GDScript_lkn54"]
 script/source = "extends Control
@@ -197,6 +202,7 @@ var dragging := false
 func reload():
 	$\"save panel/LineEdit\".text = Ship.ship_name
 	$\"ship camera\".global_position = Ship.camera.global_position
+	$\"part list\".recalculate()
 
 
 
@@ -763,6 +769,7 @@ blend_shape_mode = 0
 shadow_mesh = SubResource("ArrayMesh_tk7c1")
 
 [node name="PlanetBase" type="Node3D"]
+process_mode = 3
 script = SubResource("GDScript_ucp4p")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
@@ -773,6 +780,7 @@ shadow_enabled = true
 environment = ExtResource("1_gud6v")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
+visible = false
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -794,23 +802,22 @@ alignment = 1
 
 [node name="Button" type="Button" parent="HBoxContainer/VBoxContainer"]
 layout_mode = 2
-theme = ExtResource("1_bam06")
-theme_override_styles/normal = SubResource("StyleBoxFlat_76yds")
+theme = ExtResource("2_x2wxk")
 text = "Edit Ship
 "
 
 [node name="Button2" type="Button" parent="HBoxContainer/VBoxContainer"]
 layout_mode = 2
-theme = ExtResource("1_bam06")
-theme_override_styles/normal = SubResource("StyleBoxFlat_76yds")
+theme = ExtResource("2_x2wxk")
 text = "Exit to Map"
 
 [node name="PanelContainer" type="PanelContainer" parent="HBoxContainer"]
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_hij73")
+theme = ExtResource("2_x2wxk")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer/PanelContainer"]
 layout_mode = 2
+theme_override_constants/separation = 10
 
 [node name="Label" type="Label" parent="HBoxContainer/PanelContainer/VBoxContainer"]
 layout_mode = 2
@@ -828,8 +835,7 @@ horizontal_alignment = 1
 [node name="Button" type="Button" parent="HBoxContainer/PanelContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 8
-theme = ExtResource("2_roblw")
-theme_override_styles/normal = SubResource("StyleBoxFlat_vvewj")
+theme = ExtResource("2_x2wxk")
 text = "Go"
 
 [node name="PanelContainer" type="PanelContainer" parent="."]
@@ -845,7 +851,7 @@ offset_right = 20.0
 offset_bottom = 20.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_76yds")
+theme = ExtResource("2_x2wxk")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer"]
 layout_mode = 2
@@ -864,7 +870,7 @@ text = "From Quests: 1x Engine"
 [node name="Label3" type="Label" parent="PanelContainer/VBoxContainer"]
 layout_mode = 2
 theme = ExtResource("2_roblw")
-text = "From Pickups: 1x Gun"
+text = "From Drops: 1x Gun"
 
 [node name="Button" type="Button" parent="PanelContainer/VBoxContainer"]
 layout_mode = 2
@@ -885,22 +891,26 @@ offset_right = 20.0
 offset_bottom = 20.0
 grow_horizontal = 2
 grow_vertical = 2
+script = SubResource("GDScript_5miol")
+
+[node name="Label" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme = ExtResource("2_roblw")
+text = "100 Credits"
 
 [node name="Button" type="Button" parent="VBoxContainer"]
 layout_mode = 2
-theme = ExtResource("2_roblw")
-text = "Continue
-"
+theme = ExtResource("2_x2wxk")
+text = "Exit"
 
 [node name="Control" type="Control" parent="."]
-visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 1
+mouse_filter = 2
 script = SubResource("GDScript_lkn54")
 
 [node name="save panel" type="HBoxContainer" parent="Control"]
@@ -915,42 +925,35 @@ grow_horizontal = 2
 theme_override_constants/separation = 10
 alignment = 1
 
-[node name="TextureButton" type="TextureButton" parent="Control/save panel"]
-visible = false
-custom_minimum_size = Vector2(64, 64)
-layout_mode = 2
-texture_normal = ExtResource("5_nhxou")
-texture_pressed = ExtResource("5_nhxou")
-texture_hover = ExtResource("5_nhxou")
-texture_disabled = ExtResource("5_nhxou")
-texture_focused = ExtResource("5_nhxou")
-stretch_mode = 0
-
 [node name="LineEdit" type="LineEdit" parent="Control/save panel"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme = ExtResource("2_roblw")
+theme = ExtResource("2_x2wxk")
 placeholder_text = "Enter Ship Name"
 
 [node name="save" type="Button" parent="Control/save panel"]
 layout_mode = 2
-theme = ExtResource("2_roblw")
+theme = ExtResource("2_x2wxk")
+theme_override_font_sizes/font_size = 25
 text = "Save"
 
 [node name="new" type="Button" parent="Control/save panel"]
 layout_mode = 2
-theme = ExtResource("2_roblw")
+theme = ExtResource("2_x2wxk")
+theme_override_font_sizes/font_size = 25
 text = "New
 "
 
 [node name="load" type="Button" parent="Control/save panel"]
 layout_mode = 2
-theme = ExtResource("2_roblw")
+theme = ExtResource("2_x2wxk")
+theme_override_font_sizes/font_size = 25
 text = "Load"
 
 [node name="exit" type="Button" parent="Control/save panel"]
 layout_mode = 2
-theme = ExtResource("2_roblw")
+theme = ExtResource("2_x2wxk")
+theme_override_font_sizes/font_size = 25
 text = "Exit
 "
 
@@ -1402,6 +1405,7 @@ skeleton = NodePath("")
 [connection signal="button_down" from="HBoxContainer/VBoxContainer/Button2" to="." method="start_map"]
 [connection signal="button_down" from="HBoxContainer/PanelContainer/VBoxContainer/Button" to="." method="start_shop"]
 [connection signal="button_down" from="PanelContainer/VBoxContainer/Button" to="." method="start_menu"]
+[connection signal="button_down" from="VBoxContainer/Button" to="." method="start_menu"]
 [connection signal="button_down" from="Control/save panel/save" to="Control" method="save_prompt"]
 [connection signal="button_down" from="Control/save panel/new" to="Control" method="new_prompt"]
 [connection signal="button_down" from="Control/save panel/load" to="Control/load file" method="show"]

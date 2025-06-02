@@ -17,6 +17,8 @@ var enemy
 @export var projectile_speed := 45.0
 @export var health := 10.0
 @export var color_scheme : Array[StandardMaterial3D]
+@export var part_drop_rarity := 0
+@export var coin_drop_luck := 0.25
 
 
 
@@ -170,11 +172,23 @@ func damage(amount : float, part : Node3D = null, knockback := Vector3.ZERO, sfx
 		$HBoxContainer.hide()
 		$Control.hide()
 		
-		#await get_tree().create_timer(0.1).timeout
-		#var drop = load("res://classes/pickup.tscn").instantiate()
-		#drop.shield = true
-		#add_sibling(drop)
-		#drop.global_position = global_position
+		GameManager.drop_luck += coin_drop_luck
+		while GameManager.drop_luck >= 1:
+			GameManager.drop_luck -= 1
+			var drop = load("res://classes/pickup.tscn").instantiate()
+			drop.credits = 3
+			add_sibling(drop)
+			drop.global_position = global_position
+			await get_tree().create_timer(0.1).timeout
+		if part_drop_rarity > 0:
+			while true:
+				var drop_part = GameManager.part_data.keys().pick_random()
+				if GameManager.part_data[drop_part].rarity == part_drop_rarity + randi_range(-1, 1):
+					var drop = load("res://classes/pickup.tscn").instantiate()
+					drop.part = drop_part
+					add_sibling(drop)
+					drop.global_position = global_position
+					break
 		
 		await get_tree().create_timer(0.5).timeout
 		queue_free()

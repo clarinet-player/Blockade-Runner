@@ -1,15 +1,8 @@
 [gd_scene load_steps=5 format=3 uid="uid://5b47t54jmhc"]
 
 [ext_resource type="Theme" uid="uid://co8tjlbj1cjyd" path="res://assets/theme.tres" id="1_ftx6e"]
+[ext_resource type="Theme" uid="uid://bu38ut87r4sud" path="res://assets/master_theme.tres" id="1_y1p3a"]
 [ext_resource type="Theme" uid="uid://6ftdqmtb2drx" path="res://assets/theme2.tres" id="2_2k0xq"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_76yds"]
-bg_color = Color(0.117647, 0.117647, 0.117647, 1)
-border_width_left = 10
-border_width_top = 10
-border_width_right = 10
-border_width_bottom = 10
-border_color = Color(0.117647, 0.117647, 0.117647, 1)
 
 [sub_resource type="GDScript" id="GDScript_bh3qh"]
 script/source = "extends PanelContainer
@@ -43,11 +36,12 @@ func button_down():
 "
 
 [node name="PanelContainer" type="PanelContainer"]
-theme_override_styles/panel = SubResource("StyleBoxFlat_76yds")
+theme = ExtResource("1_y1p3a")
 script = SubResource("GDScript_bh3qh")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 layout_mode = 2
+theme_override_constants/separation = 10
 alignment = 1
 
 [node name="Label" type="Label" parent="VBoxContainer"]
@@ -75,8 +69,8 @@ text = "Out of cargo space!"
 
 [node name="Button" type="Button" parent="VBoxContainer"]
 layout_mode = 2
-theme = ExtResource("2_2k0xq")
-theme_override_styles/normal = SubResource("StyleBoxFlat_76yds")
+theme = ExtResource("1_y1p3a")
+theme_override_font_sizes/font_size = 25
 text = "Accept"
 
 [connection signal="button_down" from="VBoxContainer/Button" to="." method="button_down"]

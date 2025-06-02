@@ -59,7 +59,7 @@ func _process(delta):
 	if shielded:
 		$HBoxContainer2/GreyHeath.hide()
 		$HBoxContainer2/WhiteHealth.show()
-	elif is_equal_approx(last_shield_health, current_health) or current_health < 50:
+	elif is_equal_approx(last_shield_health, current_health) or current_health < 52:
 		$HBoxContainer2/GreyHeath.show()
 		$HBoxContainer2/WhiteHealth.hide()
 	else:
@@ -109,7 +109,7 @@ func damage(amount : float, part : Node3D = null, knockback := Vector3.ZERO, sfx
 	if shielded:
 		return
 	
-	current_health -= amount
+	current_health -= amount * 0.9
 	velocity += knockback
 	var audio = load(\"res://classes/audio_player.tscn\").instantiate()
 	
@@ -131,6 +131,25 @@ func damage(amount : float, part : Node3D = null, knockback := Vector3.ZERO, sfx
 		$HBoxContainer.hide()
 		$HBoxContainer2.hide()
 		$Control.hide()
+		
+		GameManager.drop_luck += coin_drop_luck
+		while GameManager.drop_luck >= 1:
+			GameManager.drop_luck -= 1
+			var drop = load(\"res://classes/pickup.tscn\").instantiate()
+			drop.credits = 3
+			add_sibling(drop)
+			drop.global_position = global_position
+			await get_tree().create_timer(0.1).timeout
+		if part_drop_rarity > 0:
+			while true:
+				var drop_part = GameManager.part_data.keys().pick_random()
+				if GameManager.part_data[drop_part].rarity == part_drop_rarity + randi_range(-1, 1):
+					var drop = load(\"res://classes/pickup.tscn\").instantiate()
+					drop.part = drop_part
+					add_sibling(drop)
+					drop.global_position = global_position
+				break
+		
 		await get_tree().create_timer(1).timeout
 		queue_free()
 	
@@ -186,6 +205,8 @@ attack_damage = 2.0
 projectile_speed = 60.0
 health = 150.0
 color_scheme = Array[StandardMaterial3D]([SubResource("StandardMaterial3D_386j3"), SubResource("StandardMaterial3D_iljtr")])
+part_drop_rarity = 3
+coin_drop_luck = 2.5
 
 [node name="Shield" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0.2)

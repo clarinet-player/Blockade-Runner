@@ -39,6 +39,16 @@ func _ready():
 	heavy_spawn_time = Time.get_ticks_msec()
 	boss_spawn_time = Time.get_ticks_msec()
 	
+	$WorldEnvironment.environment.sky_custom_fov = 180.0
+	var tween = create_tween()
+	tween.tween_property($WorldEnvironment, \"environment:sky_custom_fov\", 70.0, 1.0)
+	
+	for child in get_children():
+		if child is Sprite3D:
+			child.pixel_size = 0.0
+			tween = create_tween()
+			tween.tween_property(child, \"pixel_size\", 0.01 * child.display_position.length(), 1.0)
+	
 	while true:
 		if tokens < 2:
 			tokens += 1

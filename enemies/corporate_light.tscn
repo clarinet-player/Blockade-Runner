@@ -31,7 +31,6 @@ color_scheme = Array[StandardMaterial3D]([SubResource("StandardMaterial3D_2ypwg"
 
 [node name="SlabGun" parent="." instance=ExtResource("2_ekghv")]
 transform = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, 0, 0.5, -3)
-color_indexes = [0, 1]
 
 [node name="FuelTank" parent="." instance=ExtResource("3_mb68i")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1)

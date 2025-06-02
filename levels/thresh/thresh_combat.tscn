@@ -10,7 +10,7 @@
 
 [node name="CombatSceneBase" instance=ExtResource("1_sq2qa")]
 planet = "Thresh"
-base_difficulty = 2.0
+base_difficulty = 2.5
 light = "res://enemies/corporate_light.tscn"
 medium = "res://enemies/impaler.tscn"
 heavy = "res://enemies/gunner.tscn"

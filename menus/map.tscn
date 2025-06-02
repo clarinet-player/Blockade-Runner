@@ -1,7 +1,8 @@
-[gd_scene load_steps=7 format=3 uid="uid://b8f201ao2dekl"]
+[gd_scene load_steps=8 format=3 uid="uid://b8f201ao2dekl"]
 
 [ext_resource type="PackedScene" uid="uid://do0mk003iqx8n" path="res://classes/map_marker.tscn" id="1_qb866"]
 [ext_resource type="Sky" uid="uid://xfj61573c5m8" path="res://assets/stars.tres" id="1_uhqxu"]
+[ext_resource type="Theme" uid="uid://bu38ut87r4sud" path="res://assets/master_theme.tres" id="3_7cq28"]
 [ext_resource type="Theme" uid="uid://co8tjlbj1cjyd" path="res://assets/theme.tres" id="6_8spxq"]
 [ext_resource type="Theme" uid="uid://6ftdqmtb2drx" path="res://assets/theme2.tres" id="7_nebhe"]
 
@@ -44,16 +45,16 @@ func focus(what : Node3D):
 	target_location = what.global_position
 	focused_location = what.planet
 	$Control.show()
-	$Control/VBoxContainer/name.text = what.planet
+	$Control/PanelContainer/VBoxContainer/name.text = what.planet
 	required_fuel = current_location.distance_to(target_location) * Ship.mass * 0.4
 	if required_fuel < Ship.fuel_capacity:
-		$Control/VBoxContainer/fuel.show()
-		$\"Control/VBoxContainer/not enough fuel\".hide()
-		$Control/VBoxContainer/fuel.text = \"Cost: \" + str(snapped(required_fuel, 0.1)) + \" Fuel\"
+		$Control/PanelContainer/VBoxContainer/fuel.show()
+		$\"Control/PanelContainer/VBoxContainer/not enough fuel\".hide()
+		$Control/PanelContainer/VBoxContainer/fuel.text = \"Cost: \" + str(snapped(required_fuel, 0.1)) + \" Fuel\"
 	else:
-		$\"Control/VBoxContainer/not enough fuel\".show()
-		$Control/VBoxContainer/fuel.hide()
-		$\"Control/VBoxContainer/not enough fuel\".text = \"Cost: \" + str(snapped(required_fuel, 0.1)) + \" Fuel\"
+		$\"Control/PanelContainer/VBoxContainer/not enough fuel\".show()
+		$Control/PanelContainer/VBoxContainer/fuel.hide()
+		$\"Control/PanelContainer/VBoxContainer/not enough fuel\".text = \"Cost: \" + str(snapped(required_fuel, 0.1)) + \" Fuel\"
 
 
 func unfocus():
@@ -147,7 +148,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.29723, -1.17521, -5.17647)
 planet = "Unfinished"
 
 [node name="Control" type="Control" parent="."]
-visible = false
 layout_mode = 3
 anchors_preset = 6
 anchor_left = 1.0
@@ -160,7 +160,7 @@ offset_bottom = 20.0
 grow_horizontal = 0
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Control"]
+[node name="PanelContainer" type="PanelContainer" parent="Control"]
 layout_mode = 1
 anchors_preset = 6
 anchor_left = 1.0
@@ -168,14 +168,18 @@ anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
 offset_left = -500.0
-offset_top = -218.0
-offset_bottom = 220.0
+offset_top = -205.5
+offset_bottom = 205.5
 grow_horizontal = 0
 grow_vertical = 2
+theme = ExtResource("3_7cq28")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Control/PanelContainer"]
+layout_mode = 2
 theme_override_constants/separation = 25
 alignment = 1
 
-[node name="name" type="Label" parent="Control/VBoxContainer"]
+[node name="name" type="Label" parent="Control/PanelContainer/VBoxContainer"]
 custom_minimum_size = Vector2(500, 100)
 layout_mode = 2
 theme = ExtResource("6_8spxq")
@@ -183,33 +187,33 @@ text = "Last Chance Station"
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="fuel" type="Label" parent="Control/VBoxContainer"]
+[node name="fuel" type="Label" parent="Control/PanelContainer/VBoxContainer"]
 layout_mode = 2
 theme = ExtResource("7_nebhe")
 text = "Fuel"
 horizontal_alignment = 1
 
-[node name="not enough fuel" type="Label" parent="Control/VBoxContainer"]
+[node name="not enough fuel" type="Label" parent="Control/PanelContainer/VBoxContainer"]
 layout_mode = 2
 theme = ExtResource("7_nebhe")
 theme_override_colors/font_color = Color(1, 0, 0, 1)
 text = "Fuel"
 horizontal_alignment = 1
 
-[node name="HBoxContainer" type="HBoxContainer" parent="Control/VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="Control/PanelContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 15
 alignment = 1
 
-[node name="Button" type="Button" parent="Control/VBoxContainer/HBoxContainer"]
+[node name="Button" type="Button" parent="Control/PanelContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 theme = ExtResource("7_nebhe")
 text = "Back"
 
-[node name="Button2" type="Button" parent="Control/VBoxContainer/HBoxContainer"]
+[node name="Button2" type="Button" parent="Control/PanelContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 theme = ExtResource("7_nebhe")
 text = "Go"
 
-[connection signal="button_down" from="Control/VBoxContainer/HBoxContainer/Button" to="." method="go_back"]
-[connection signal="button_down" from="Control/VBoxContainer/HBoxContainer/Button2" to="." method="go_to_location"]
+[connection signal="button_down" from="Control/PanelContainer/VBoxContainer/HBoxContainer/Button" to="." method="go_back"]
+[connection signal="button_down" from="Control/PanelContainer/VBoxContainer/HBoxContainer/Button2" to="." method="go_to_location"]

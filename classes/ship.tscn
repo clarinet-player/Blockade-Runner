@@ -173,16 +173,18 @@ func reset():
 
 
 func _input(event):
+	if GameManager.paused or GameManager.input_locked:
+		return
 	if event is InputEventMouseMotion and GameManager.game_state == GameManager.states.combat:
-		$Camera.global_rotate($Camera.global_basis.y.normalized(), event.relative.x * -0.001)
-		$Camera.global_rotate($Camera.global_basis.x.normalized(), event.relative.y * -0.001)
+		$Camera.global_rotate($Camera.global_basis.y.normalized(), event.relative.x * (0.001 if GameManager.settings.invert_x else -0.001) * GameManager.settings.sensitivity)
+		$Camera.global_rotate($Camera.global_basis.x.normalized(), event.relative.y * (0.001 if GameManager.settings.invert_y else -0.001) * GameManager.settings.sensitivity)
 
 
 
 func _process(delta):
 	$Camera.global_position = global_position
 	
-	if GameManager.game_state == GameManager.states.map:
+	if GameManager.game_state == GameManager.states.map or GameManager.game_state == GameManager.states.menu:
 		hide()
 	else:
 		show()
@@ -218,17 +220,22 @@ func _process(delta):
 			if i < 6:
 				$VBoxContainer/Shields.get_child(i).show()
 	
-	if !Input.is_action_pressed(\"Free Camera\") and !destroyed:
+	if !destroyed:
 		global_basis = global_basis.orthonormalized().slerp($Camera.global_basis.orthonormalized(), delta * 12)
 	
-	if (Input.get_axis(\"Left\", \"Right\") != 0 or Input.get_axis(\"Forward\", \"Back\") != 0 or Input.get_axis(\"Down\", \"Up\") != 0):
-		if engine_audio == null:
-			engine_audio = load(\"res://classes/audio_player.tscn\").instantiate()
-			engine_audio.start(null, \"res://fx/engines.mp3\")
-	elif engine_audio != null:
-		engine_audio.queue_free()
-	
-	thrust_directions = Vector3i(Input.get_axis(\"Left\", \"Right\"), Input.get_axis(\"Down\", \"Up\"), Input.get_axis(\"Forward\", \"Back\"))
+	if GameManager.paused or GameManager.input_locked:
+		thrust_directions = Vector3i.ZERO
+		if engine_audio != null:
+			engine_audio.queue_free()
+	else:
+		if (Input.get_axis(\"Left\", \"Right\") != 0 or Input.get_axis(\"Forward\", \"Back\") != 0 or Input.get_axis(\"Down\", \"Up\") != 0):
+			if engine_audio == null:
+				engine_audio = load(\"res://classes/audio_player.tscn\").instantiate()
+				engine_audio.start(null, \"res://fx/engines.mp3\")
+		elif engine_audio != null:
+			engine_audio.queue_free()
+		
+		thrust_directions = Vector3i(Input.get_axis(\"Left\", \"Right\"), Input.get_axis(\"Down\", \"Up\"), Input.get_axis(\"Forward\", \"Back\"))
 
 
 
@@ -261,7 +268,7 @@ func _physics_process(delta):
 			if shields >= max_shields:
 				stored_shield = 0
 	
-	if Input.is_action_pressed(\"Shoot Primary\") and attack_speed > 0 and Time.get_ticks_msec() - fire_time > 1000 / attack_speed and !destroyed:
+	if Input.is_action_pressed(\"Shoot Primary\") and attack_speed > 0 and Time.get_ticks_msec() - fire_time > 1000 / attack_speed and !destroyed and !GameManager.paused and !GameManager.input_locked:
 		fire_time = Time.get_ticks_msec()
 		
 		var audio = load(\"res://classes/audio_player.tscn\").instantiate()
@@ -274,9 +281,10 @@ func _physics_process(delta):
 		GameManager.add_child(bullet)
 		bullet.global_position = camera.global_position - camera.global_basis.z * 10
 	
-	velocity += global_basis.x * Input.get_axis(\"Left\", \"Right\") * delta * thrust.x
-	velocity += global_basis.z * Input.get_axis(\"Forward\", \"Back\") * delta * thrust.z
-	velocity += global_basis.y * Input.get_axis(\"Down\", \"Up\") * delta * thrust.y
+	if !GameManager.paused and !GameManager.input_locked:
+		velocity += global_basis.x * Input.get_axis(\"Left\", \"Right\") * delta * thrust.x
+		velocity += global_basis.z * Input.get_axis(\"Forward\", \"Back\") * delta * thrust.z
+		velocity += global_basis.y * Input.get_axis(\"Down\", \"Up\") * delta * thrust.y
 	
 	velocity = velocity.limit_length(max_speed)
 	

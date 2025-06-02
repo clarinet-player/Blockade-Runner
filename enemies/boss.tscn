@@ -32,7 +32,7 @@ func custom_process():
 
 
 
-func damage(amount : float, part : Node3D, knockback := Vector3.ZERO, sfx := \"\"):
+func damage(amount : float, part : Node3D = null, knockback := Vector3.ZERO, sfx := \"\"):
 	current_health -= amount
 	velocity += knockback
 	if part != null:
@@ -108,6 +108,8 @@ target_distance = Vector2(100, 375)
 attack_speed = 0.22
 health = 300.0
 color_scheme = Array[StandardMaterial3D]([SubResource("StandardMaterial3D_t5c2e"), SubResource("StandardMaterial3D_g3eef"), SubResource("StandardMaterial3D_l70dg")])
+part_drop_rarity = 4
+coin_drop_luck = 4.0
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.5)
@@ -2007,7 +2009,6 @@ transform = Transform3D(-1.31134e-07, -1, 1.14641e-14, -1, 1.31134e-07, 8.74228e
 
 [node name="MediumEngine" parent="." instance=ExtResource("9_w7xkh")]
 transform = Transform3D(0.707107, -0.707107, 0, 0.707107, 0.707107, 0, 0, 0, 1, -2.47487, 1.76777, 9)
-color_indexes = [0, 1, 1]
 
 [node name="Block283" parent="." instance=ExtResource("4_54qdj")]
 transform = Transform3D(-0.707107, -0.707107, 0, 0.707107, -0.707107, 0, 0, 0, 1, 3.18198, -2.47487, 7)
@@ -2047,7 +2048,6 @@ transform = Transform3D(-0.707107, 0.707107, -6.18172e-08, 0.707107, 0.707107, 6
 
 [node name="MediumEngine2" parent="." instance=ExtResource("9_w7xkh")]
 transform = Transform3D(-0.707107, 0.707107, 0, -0.707107, -0.707107, 0, 0, 0, 1, 2.47487, -1.76777, 9)
-color_indexes = [0, 1, 1]
 
 [node name="Block291" parent="." instance=ExtResource("4_54qdj")]
 transform = Transform3D(-0.707107, 0.707107, 0, -0.707107, -0.707107, 0, 0, 0, 1, -2.47487, -1.76777, 7)
@@ -2087,7 +2087,6 @@ transform = Transform3D(-0.707107, -0.707107, -6.18172e-08, -0.707107, 0.707107,
 
 [node name="MediumEngine3" parent="." instance=ExtResource("9_w7xkh")]
 transform = Transform3D(-0.707107, -0.707107, 0, 0.707107, -0.707107, 0, 0, 0, 1, -1.76777, -2.47487, 9)
-color_indexes = [0, 1, 1]
 
 [node name="Block299" parent="." instance=ExtResource("4_54qdj")]
 transform = Transform3D(-0.707107, 0.707107, 0, -0.707107, -0.707107, 0, 0, 0, 1, 2.47487, 3.18198, 7)
@@ -2175,7 +2174,6 @@ transform = Transform3D(-0.707107, -0.707107, -6.18172e-08, -0.707107, 0.707107,
 
 [node name="MediumEngine4" parent="." instance=ExtResource("9_w7xkh")]
 transform = Transform3D(0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 0, 0, 1, 1.76777, 2.47487, 9)
-color_indexes = [0, 1, 1]
 
 [node name="Engine" parent="." instance=ExtResource("10_6yuwq")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 11)

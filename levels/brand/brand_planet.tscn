@@ -1,15 +1,25 @@
-[gd_scene load_steps=2 format=3 uid="uid://biu1dfpwhqvgh"]
+[gd_scene load_steps=4 format=3 uid="uid://biu1dfpwhqvgh"]
 
 [ext_resource type="PackedScene" uid="uid://n1rgififa033" path="res://classes/planet_base.tscn" id="1_vobgm"]
+[ext_resource type="Texture2D" uid="uid://6s1ib3xe3rr3" path="res://levels/brand/brand_background.png" id="2_pvhte"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pdief"]
+shading_mode = 0
+albedo_texture = ExtResource("2_pvhte")
+texture_filter = 0
 
 [node name="PlanetBase" instance=ExtResource("1_vobgm")]
 unique_quest = {
 "cargo": 4,
-"credits": 10,
+"credits": 15,
 "destination": "Sarnus",
 "parts": ["Rocket Launcher"],
 "unique": "Brand"
 }
 
-[node name="Parallax" parent="." index="8"]
+[node name="Background" parent="." index="8"]
+surface_material_override/0 = SubResource("StandardMaterial3D_pdief")
+
+[node name="Parallax" parent="." index="9"]
 transform = Transform3D(-0.181173, 0, -0.676148, 0, 0.7, 0, 0.676148, 0, -0.181173, 0, 0.5, 0)
+visible = false

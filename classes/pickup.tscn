@@ -15,7 +15,6 @@ var credits := 0
 var part := \"\"
 var shield := false
 var power := false
-var collected := false
 
 
 
@@ -24,7 +23,7 @@ func _ready():
 	if shield:
 		$White.show()
 	elif credits > 0:
-		$Yellow.show()
+		$White.show()
 	elif !part.is_empty():
 		$Green.show()
 	else:
@@ -33,32 +32,42 @@ func _ready():
 
 
 func _physics_process(delta):
-	if collected:
-		return
 	if global_position.distance_to(Ship.global_position) < 5:
+		
 		if shield:
 			Ship.stored_shield += 0.25
 			load(\"res://classes/audio_player.tscn\").instantiate().start(null, \"res://assets/shield_collect.mp3\")
 			queue_free()
+		
 		elif credits > 0:
-			collected = true
+			GameManager.credits += credits
+			if GameManager.collected_pickups.has(\"Credits\"):
+				GameManager.collected_pickups[\"Credits\"] += credits
+			else:
+				GameManager.collected_pickups[\"Credits\"] = credits
 			load(\"res://classes/audio_player.tscn\").instantiate().start(null, \"res://assets/coin_collect.mp3\")
-			hide()
+			queue_free()
+		
 		elif !part.is_empty():
-			collected = true
+			if GameManager.parts.has(part):
+				GameManager.parts[part] += 1
+			else:
+				GameManager.parts[part] = 1
+			if GameManager.collected_pickups.has(part):
+				GameManager.collected_pickups[part] += 1
+			else:
+				GameManager.collected_pickups[part] = 1
 			load(\"res://classes/audio_player.tscn\").instantiate().start(null, \"res://assets/collect_coin.mp3\")
-			hide()
+			queue_free()
+		
 		else:
 			Ship.power.append(10.0)
 			load(\"res://classes/audio_player.tscn\").instantiate().start(null, \"res://assets/collect_power.mp3\")
 			queue_free()
 		return
-	if shield or credits > 0:
-		global_translate(global_position.direction_to(Ship.global_position) * 120 * delta)
-		global_translate(Ship.velocity * 0.4 * delta)
-	else:
-		global_translate(global_position.direction_to(Ship.global_position) * 50 * delta)
-		global_translate(Ship.velocity * 0.1 * delta)
+	
+	global_translate(global_position.direction_to(Ship.global_position) * 120 * delta)
+	global_translate(Ship.velocity * 0.3 * delta)
 "
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6prlv"]

@@ -1,8 +1,9 @@
-[gd_scene load_steps=6 format=3 uid="uid://coudcqs1vosss"]
+[gd_scene load_steps=7 format=3 uid="uid://coudcqs1vosss"]
 
 [ext_resource type="Theme" uid="uid://6ftdqmtb2drx" path="res://assets/theme2.tres" id="1_db0x0"]
 [ext_resource type="Texture2D" uid="uid://c2ocxf05oge1a" path="res://assets/wasd.png" id="2_tphs6"]
 [ext_resource type="Texture2D" uid="uid://cp7dy13g8hbo8" path="res://assets/Mouse_Left_Key_Light.png" id="3_hghau"]
+[ext_resource type="Theme" uid="uid://co8tjlbj1cjyd" path="res://assets/theme.tres" id="4_0g5wq"]
 
 [sub_resource type="GDScript" id="GDScript_7sqc8"]
 script/source = "extends Node
@@ -12,18 +13,18 @@ script/source = "extends Node
 enum states {
 	menu,
 	combat,
-	editor,
 	planet,
 	map
 }
 var game_state := states.menu
-
+var paused := false
+var input_locked := false
 
 
 var file_number := -1
 var location := \"\"
-var planet_seed := 0
 var difficulty_bonus := 0.0
+var drop_luck := 0.0
 var autosaved_ship := {}
 var quests := []
 var parts := {}
@@ -33,9 +34,35 @@ var completed_quests := []
 
 var collected_pickups := {}
 
+var settings
 var ships
 var planet_data
 var part_data
+
+
+
+func _ready():
+	settings = read_file(\"user://user_settings.json\")
+	if settings == null:
+		settings = {\"sensitivity\": 1.0, \"invert_x\": false, \"invert_y\": false}
+	
+	ships = read_file(\"user://ship_saves.json\")
+	if ships == null:
+		ships = {}
+	
+	planet_data = read_file(\"res://levels/planet_data.json\")
+	part_data = read_file(\"res://parts/part_data.json\")
+
+
+
+func start_menu():
+	game_state = states.menu
+	get_tree().change_scene_to_file(\"res://menus/main_menu.tscn\")
+	$\"Pause Menu\".hide()
+	
+	for child in get_children():
+		if !child is Control:
+			child.queue_free()
 
 
 
@@ -47,21 +74,26 @@ func start_combat(level := \"\"):
 	Ship.calculate_stats()
 	Ship.reset()
 	game_state = states.combat
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	
+	for child in get_children():
+		if !child is Control:
+			child.queue_free()
+	
+	input_locked = true
+	await get_tree().create_timer(1.0).timeout
+	input_locked = false
 
 
 
 func start_planet(planet := \"\"):
-	if game_state == states.combat:
-		planet_seed = randi()
-	
 	if !planet.is_empty():
 		location = planet
 	
 	get_tree().change_scene_to_file(planet_data[location].planet)
 	
 	for child in get_children():
-		child.queue_free()
+		if !child is Control:
+			child.queue_free()
 
 
 
@@ -69,9 +101,32 @@ func start_map():
 	get_tree().change_scene_to_file(\"res://menus/map.tscn\")
 	
 	game_state = states.map
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	for child in get_children():
-		child.queue_free()
+		if !child is Control:
+			child.queue_free()
+
+
+
+func _input(event):
+	if event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed and game_state != states.menu:
+		paused = !paused
+		$\"Pause Menu\".visible = paused
+
+
+
+func _process(delta):
+	if paused:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	elif game_state == states.combat:
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	else:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+
+
+func unpause():
+	paused = false
+	$\"Pause Menu\".hide()
 
 
 
@@ -86,13 +141,6 @@ func new_game():
 	discovered_planets = [\"Eden\"]
 	completed_quests = []
 	
-	ships = read_file(\"user://ship_saves.json\")
-	if ships == null:
-		ships = {}
-	
-	planet_data = GameManager.read_file(\"res://levels/planet_data.json\")
-	part_data = GameManager.read_file(\"res://parts/part_data.json\")
-	
 	Ship.load_data(autosaved_ship, \"Default Ship\")
 	start_combat()
 	$\"tutorial prompts\".start()
@@ -104,14 +152,6 @@ func load_game(file : int):
 		new_game()
 		return
 	var data : Dictionary = read_file(\"user://game_data.json\")[file]
-	ships = read_file(\"user://ship_saves.json\")
-	if ships == null:
-		ships = {}
-	game_state = states.planet
-	
-	planet_data = GameManager.read_file(\"res://levels/planet_data.json\")
-	part_data = GameManager.read_file(\"res://parts/part_data.json\")
-	
 	file_number = file
 	
 	if data.has(\"Location\"): location = data[\"Location\"]
@@ -137,7 +177,11 @@ func load_game(file : int):
 	
 	if data.has(\"Completed Quests\"): completed_quests = data[\"Completed Quests\"]
 	
+	paused = false
+	input_locked = false
+	
 	Ship.load_data(autosaved_ship, \"Autosaved Ship\")
+	game_state = states.planet
 	start_planet()
 
 
@@ -296,11 +340,106 @@ size_flags_vertical = 4
 texture = ExtResource("3_hghau")
 expand_mode = 1
 
-[node name="ColorRect" type="ColorRect" parent="."]
+[node name="Pause Menu" type="Control" parent="."]
 visible = false
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0, 0, 0, 0)
+
+[node name="menu" type="VBoxContainer" parent="Pause Menu"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -344.5
+offset_top = -162.5
+offset_right = 344.5
+offset_bottom = 162.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="continue" type="Button" parent="Pause Menu/menu"]
+layout_mode = 2
+theme = ExtResource("4_0g5wq")
+theme_override_font_sizes/font_size = 80
+text = "Continue
+"
+
+[node name="settings" type="Button" parent="Pause Menu/menu"]
+visible = false
+layout_mode = 2
+theme = ExtResource("4_0g5wq")
+text = "Settings
+"
+
+[node name="exit" type="Button" parent="Pause Menu/menu"]
+layout_mode = 2
+theme = ExtResource("4_0g5wq")
+text = "Exit"
+
+[node name="menu2" type="VBoxContainer" parent="Pause Menu"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -266.5
+offset_top = -162.5
+offset_right = 266.5
+offset_bottom = 162.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="Pause Menu/menu2"]
+layout_mode = 2
+theme = ExtResource("1_db0x0")
+text = "Mouse Sensitivity: 1.0"
+horizontal_alignment = 1
+
+[node name="HSlider" type="HSlider" parent="Pause Menu/menu2"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+
+[node name="Label2" type="Label" parent="Pause Menu/menu2"]
+layout_mode = 2
+theme = ExtResource("1_db0x0")
+text = "Invert Mouse"
+horizontal_alignment = 1
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="Pause Menu/menu2"]
+layout_mode = 2
+alignment = 1
+
+[node name="Label2" type="Label" parent="Pause Menu/menu2/HBoxContainer2"]
+layout_mode = 2
+theme = ExtResource("1_db0x0")
+text = "X"
+
+[node name="CheckButton" type="CheckButton" parent="Pause Menu/menu2/HBoxContainer2"]
+layout_mode = 2
+
+[node name="Label3" type="Label" parent="Pause Menu/menu2/HBoxContainer2"]
+layout_mode = 2
+theme = ExtResource("1_db0x0")
+text = "Y"
+
+[node name="CheckButton2" type="CheckButton" parent="Pause Menu/menu2/HBoxContainer2"]
+layout_mode = 2
+
+[node name="quit" type="Button" parent="Pause Menu/menu2"]
+layout_mode = 2
+theme = ExtResource("4_0g5wq")
+text = "Back"
+
+[connection signal="button_down" from="Pause Menu/menu/continue" to="." method="unpause"]
+[connection signal="button_down" from="Pause Menu/menu/exit" to="." method="start_menu"]

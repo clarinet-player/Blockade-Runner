@@ -1,0 +1,63 @@
+[gd_scene load_steps=4 format=3 uid="uid://by4gxkjqtnqde"]
+
+[ext_resource type="Theme" uid="uid://6ftdqmtb2drx" path="res://assets/theme2.tres" id="1_ino1x"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mjddw"]
+bg_color = Color(0.117647, 0.117647, 0.117647, 1)
+border_width_left = 10
+border_width_top = 10
+border_width_right = 10
+border_width_bottom = 10
+border_color = Color(0.117647, 0.117647, 0.117647, 1)
+
+[sub_resource type="GDScript" id="GDScript_utpeb"]
+script/source = "extends PanelContainer
+
+
+var part : String
+var price : int
+
+
+func _ready():
+	$HBoxContainer/Label.text = part
+	$HBoxContainer/Label2.text = str(price) + \" Credits\"
+
+
+func buy():
+	if GameManager.credits < price:
+		return
+	
+	GameManager.credits -= price
+	if GameManager.parts.has(part):
+		GameManager.parts[part] += 1
+	else:
+		GameManager.parts[part] = 1
+	
+	get_parent().reload()
+"
+
+[node name="PanelContainer" type="PanelContainer"]
+theme_override_styles/panel = SubResource("StyleBoxFlat_mjddw")
+script = SubResource("GDScript_utpeb")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 25
+
+[node name="Label" type="Label" parent="HBoxContainer"]
+layout_mode = 2
+theme = ExtResource("1_ino1x")
+text = "Block"
+
+[node name="Label2" type="Label" parent="HBoxContainer"]
+layout_mode = 2
+theme = ExtResource("1_ino1x")
+text = "5 Credits"
+
+[node name="Button" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+theme = ExtResource("1_ino1x")
+text = "Buy
+"
+
+[connection signal="button_down" from="HBoxContainer/Button" to="." method="buy"]

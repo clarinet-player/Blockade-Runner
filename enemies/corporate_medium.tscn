@@ -44,16 +44,15 @@ target_distance = Vector2(100, 300)
 attack_speed = 0.25
 attack_damage = 2.5
 projectile_speed = 50.0
-health = 16.0
+health = 15.0
 color_scheme = Array[StandardMaterial3D]([SubResource("StandardMaterial3D_r8e42"), SubResource("StandardMaterial3D_vm0lb")])
+coin_drop_luck = 0.5
 
 [node name="SlabGun" parent="." instance=ExtResource("2_y0mhc")]
 transform = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, -1, 0, -3)
-color_indexes = [0, 1]
 
 [node name="SlabGun2" parent="." instance=ExtResource("2_y0mhc")]
 transform = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, 1, 0, -3)
-color_indexes = [0, 1]
 
 [node name="Block" parent="." instance=ExtResource("3_srayb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, -1)

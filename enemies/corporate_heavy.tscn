@@ -60,6 +60,8 @@ attack_damage = 1.5
 projectile_speed = 35.0
 health = 85.0
 color_scheme = Array[StandardMaterial3D]([SubResource("StandardMaterial3D_pox65"), SubResource("StandardMaterial3D_fq14a")])
+part_drop_rarity = 1
+coin_drop_luck = 1.5
 
 [node name="FuelTank2" parent="." instance=ExtResource("4_irbr1")]
 transform = Transform3D(1.31134e-07, 1, 0, -1, 1.31134e-07, 0, 0, 0, 1, -2, 0, 1)
